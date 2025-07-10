@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-class DateHelper {
+class DateTimeHelper {
   static String getFormattedTodayDate() {
     final now = DateTime.now();
     final dayName = DateFormat('EEEE').format(now);
@@ -21,10 +21,16 @@ class DateHelper {
       }
     }
 
-    return "$dayName ${dayNumber}${suffix(now.day)} $monthName";
+    return "$dayName $dayNumber${suffix(now.day)} $monthName";
   }
+
   static String formatTime(int hour, int minute) {
     final dt = DateTime(0, 0, 0, hour, minute);
     return DateFormat('hh:mm a').format(dt); // example: 04:35 PM
+  }
+
+  static String formatDate(String isoDateString) {
+    final dateTime = DateTime.parse(isoDateString);
+    return DateFormat("MMM dd, yyyy").format(dateTime);
   }
 }

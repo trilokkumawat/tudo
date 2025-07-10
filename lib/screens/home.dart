@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:todo/backend/firebaes/firebase_service.dart';
 import 'package:todo/screens/taskadd.dart';
 import 'package:todo/utils/datetime_helper.dart';
 import 'package:todo/utils/methodhelper.dart';
@@ -11,6 +13,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final FirestoreService _firestore = FirestoreService();
+
   final tabs = ['All', 'Complete', 'Active'];
   int selectedIndex = 0;
 
@@ -39,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(DateHelper.getFormattedTodayDate()),
+                        Text(DateTimeHelper.getFormattedTodayDate()),
                         Icon(Icons.more_horiz),
                       ],
                     ),
@@ -106,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               Text(
-                                '${dayName}',
+                                dayName,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: isToday
@@ -132,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     return GestureDetector(
                       onTap: () {
-                         safeSetState(this, () {
+                        safeSetState(this, () {
                           selectedIndex = index;
                         });
                       },
@@ -171,16 +175,34 @@ class _HomeScreenState extends State<HomeScreen> {
                   }),
                 ),
               ),
+              StreamBuilder<QuerySnapshot>(
+                stream: _firestore.getData('task'),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return CircularProgressIndicator();
+                  final allTasks = snapshot.data!.docs;
+                  List filteredTasks;
 
-              SizedBox(
-                height: MediaQuery.of(context).size.height / 1.9,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 16, left: 16),
-                  child: ListView.builder(
+                  if (selectedIndex == 1) { // Complete
+                    filteredTasks = allTasks.where((doc) =>
+                      (doc.data() as Map<String, dynamic>)['status'] == 'complete'
+                    ).toList();
+                  } else if (selectedIndex == 2) { // Active
+                    filteredTasks = allTasks.where((doc) =>
+                      (doc.data() as Map<String, dynamic>)['status'] == 'active'
+                    ).toList();
+                  } else { // All
+                    filteredTasks = allTasks;
+                  }
+
+                  return ListView.builder(
                     shrinkWrap: true,
                     physics: BouncingScrollPhysics(),
-                    itemCount: 10,
+                    itemCount: filteredTasks.length,
                     itemBuilder: (context, index) {
+                      final task = filteredTasks[index];
+                      final data = task.data() as Map<String, dynamic>?;
+                      final docId = task.id; // ✅ get document ID
+
                       return Padding(
                         padding: const EdgeInsets.only(
                           top: 10,
@@ -199,6 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             boxShadow: [
                               BoxShadow(
+                                // ignore: deprecated_member_use
                                 color: Colors.grey.withOpacity(
                                   0.5,
                                 ), // Shadow color
@@ -212,64 +235,210 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Icon(
-                                    Icons.radio_button_unchecked,
-                                    color: Colors.pink.shade100,
-                                  ),
-                                  SizedBox(width: 20),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  // Left side: Icon and task info
+                                  Row(
                                     children: [
-                                      Text(
-                                        "3:00 PM",
-                                        style: TextStyle(
+                                      GestureDetector(
+                                        onTap: () async {
+                                          if(task["status"]=="active"){
+                                            await _firestore.updateData(
+                                            "task",
+                                            docId,
+                                            {"status": "complete"},
+                                          );
+                                          }else{
+                                             await _firestore.updateData(
+                                            "task",
+                                            docId,
+                                            {"status": "active"},
+                                          );
+                                          }
+                                        },
+                                        child: Icon(
+                                          data != null &&
+                                                  data.containsKey('status') &&
+                                                  data['status'] != null &&
+                                                  data['status']
+                                                      .toString()
+                                                      .isNotEmpty &&
+                                                  data['status'] == "complete"
+                                              ? Icons.radio_button_checked_outlined
+                                              : Icons.radio_button_unchecked,
                                           color: Color(0xFF12272F),
                                         ),
                                       ),
-                                      Text(
-                                        "Meeting: UX Case",
-                                        style: TextStyle(
-                                          color: Color(0xFF12272F),
-                                        ),
-                                      ),
-                                      Text(
-                                        "Discuss Milton website",
-                                        style: TextStyle(
-                                          color: Color(0xFF12272F),
-                                        ),
+                                      SizedBox(width: 20),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (data != null &&
+                                              data.containsKey('intervel') &&
+                                              data['intervel'] != null &&
+                                              data['intervel']
+                                                  .toString()
+                                                  .isNotEmpty)
+                                            Text(
+                                              data['intervel'],
+                                              style: TextStyle(
+                                                color: Color(0xFF12272F),
+                                              ),
+                                            ),
+                                          Text(
+                                            data?["task"] ?? "",
+                                            style: TextStyle(
+                                              color: Color(0xFF12272F),
+                                            ),
+                                          ),
+                                          Text(
+                                            data?["notes"] ?? "",
+                                            style: TextStyle(
+                                              color: Color(0xFF12272F),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceAround,
-                                      children: [
-                                        Text(
-                                          "Edit",
-                                          style: TextStyle(
-                                            color: Color(0xFF12272F),
-                                          ),
+                                  // Right side: Edit and alarm
+                                  Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Text(
+                                        "Edit",
+                                        style: TextStyle(
+                                          color: Color(0xFF12272F),
                                         ),
+                                      ),
+                                      if (data != null &&
+                                          data.containsKey('alarm') &&
+                                          data['alarm'] != null &&
+                                          data['alarm'].toString().isNotEmpty)
                                         Icon(
                                           Icons.alarm_add_outlined,
                                           color: Color(0xFF12272F),
                                         ),
-                                      ],
-                                    ),
+                                    ],
                                   ),
                                 ],
                               ),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: Text(DateTimeHelper.formatDate(task["created_at"]),style: TextStyle(fontSize: 10,fontWeight: FontWeight.w300),))
                             ],
                           ),
                         ),
                       );
                     },
-                  ),
-                ),
+                  );
+                },
               ),
+
+              // SizedBox(
+              //   height: MediaQuery.of(context).size.height / 1.9,
+              //   child: Padding(
+              //     padding: const EdgeInsets.only(right: 16, left: 16),
+              //     child:
+              //     ListView.builder(
+              //       shrinkWrap: true,
+              //       physics: BouncingScrollPhysics(),
+              //       itemCount: 10,
+              //       itemBuilder: (context, index) {
+              //         return
+              //         Padding(
+              //           padding: const EdgeInsets.only(
+              //             top: 10,
+              //             left: 10, // Added left padding
+              //             right: 10, // Added right padding
+              //             bottom: 10,
+              //           ), // space between items
+              //           child: Container(
+              //             padding: const EdgeInsets.all(16),
+
+              //             decoration: BoxDecoration(
+              //               color: Colors.white,
+              //               borderRadius: BorderRadius.only(
+              //                 bottomRight: Radius.circular(20),
+              //                 topLeft: Radius.circular(20),
+              //               ),
+              //               boxShadow: [
+              //                 BoxShadow(
+              //                   // ignore: deprecated_member_use
+              //                   color: Colors.grey.withOpacity(
+              //                     0.5,
+              //                   ), // Shadow color
+              //                   spreadRadius: 2,
+              //                   blurRadius: 5,
+              //                   offset: Offset(0, 3),
+              //                 ),
+              //               ],
+              //             ),
+              //             child: Column(
+              //               crossAxisAlignment: CrossAxisAlignment.start,
+              //               children: [
+              //                 Row(
+              //                   children: [
+              //                     Icon(
+              //                       Icons.radio_button_unchecked,
+              //                       color: Colors.pink.shade100,
+              //                     ),
+              //                     SizedBox(width: 20),
+              //                     Column(
+              //                       crossAxisAlignment:
+              //                           CrossAxisAlignment.start,
+              //                       children: [
+              //                         Text(
+              //                           "3:00 PM",
+              //                           style: TextStyle(
+              //                             color: Color(0xFF12272F),
+              //                           ),
+              //                         ),
+              //                         Text(
+              //                           "Meeting: UX Case",
+              //                           style: TextStyle(
+              //                             color: Color(0xFF12272F),
+              //                           ),
+              //                         ),
+              //                         Text(
+              //                           "Discuss Milton website",
+              //                           style: TextStyle(
+              //                             color: Color(0xFF12272F),
+              //                           ),
+              //                         ),
+              //                       ],
+              //                     ),
+              //                     Expanded(
+              //                       child: Column(
+              //                         mainAxisAlignment:
+              //                             MainAxisAlignment.spaceAround,
+              //                         children: [
+              //                           Text(
+              //                             "Edit",
+              //                             style: TextStyle(
+              //                               color: Color(0xFF12272F),
+              //                             ),
+              //                           ),
+              //                           Icon(
+              //                             Icons.alarm_add_outlined,
+              //                             color: Color(0xFF12272F),
+              //                           ),
+              //                         ],
+              //                       ),
+              //                     ),
+              //                   ],
+              //                 ),
+              //               ],
+              //             ),
+              //           ),
+              //         );
+              //       },
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),

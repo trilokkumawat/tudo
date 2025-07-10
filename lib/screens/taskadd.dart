@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:todo/backend/firebaes/firebase_service.dart';
 import 'package:todo/screens/monthlycalendar.dart';
 import 'package:todo/utils/datetime_helper.dart';
 import 'package:todo/utils/methodhelper.dart';
@@ -18,6 +20,7 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _taskController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+  final FirestoreService firestoreService = FirestoreService();
 
   @override
   void dispose() {
@@ -59,7 +62,7 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                         color: Color(0xFF12272F),
                       ),
                     ),
-                    Text(DateHelper.getFormattedTodayDate()),
+                    Text(DateTimeHelper.getFormattedTodayDate()),
                   ],
                 ),
                 SizedBox(height: 10),
@@ -81,6 +84,7 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
+                          // ignore: deprecated_member_use
                           color: Colors.grey.withOpacity(0.5),
                           spreadRadius: 2,
                           blurRadius: 5,
@@ -168,7 +172,7 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
 
                                     if (picked != null) {
                                       // Format using external class
-                                      String formatted = DateHelper.formatTime(
+                                      String formatted = DateTimeHelper.formatTime(
                                         picked.hour,
                                         picked.minute,
                                       );
@@ -208,15 +212,16 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                                     ),
                                     GestureDetector(
                                       onTap: () async {
-                                        TimeOfDay? picked = await showTimePicker(
-                                          context: context,
-                                          initialTime: TimeOfDay.now(),
-                                        );
+                                        TimeOfDay? picked =
+                                            await showTimePicker(
+                                              context: context,
+                                              initialTime: TimeOfDay.now(),
+                                            );
 
                                         if (picked != null) {
                                           // Format using external class
                                           String formatted =
-                                              DateHelper.formatTime(
+                                              DateTimeHelper.formatTime(
                                                 picked.hour,
                                                 picked.minute,
                                               );
@@ -255,11 +260,29 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                         ),
                       ),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState?.validate() ?? false) {
-                       
-                      } else {
-                        // Show error if needed (handled by validators)
+                        try {
+                          await firestoreService.addData("task", {
+                            "task": _taskController.text,
+                            "notes": _notesController.text,
+                            "alarm": selectedAlaram,
+                            "intervel": selectedTime,
+                            "created_at":DateTime.now().toUtc().toIso8601String(),
+                            "status":"active"
+                          });
+                          Navigator.pop(context);
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Successfully added!")),
+                          );
+                        } catch (e) {
+                          print("Failed to add: $e");
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Failed to add: $e")),
+                          );
+                        }
                       }
                     },
                     child: Text(
