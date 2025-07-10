@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:todo/utils/methodhelper.dart';
 
 class MonthlyCalendar extends StatefulWidget {
+  final Function(DateTime selectedDate)? onDateSelected;
+
+  const MonthlyCalendar({Key? key, this.onDateSelected}) : super(key: key);
+
   @override
   _MonthlyCalendarState createState() => _MonthlyCalendarState();
 }
 
 class _MonthlyCalendarState extends State<MonthlyCalendar> {
   DateTime currentDate = DateTime.now();
+  int? _selectedDay;
 
   @override
   Widget build(BuildContext context) {
@@ -33,32 +39,41 @@ class _MonthlyCalendarState extends State<MonthlyCalendar> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    setState(() {
+                     safeSetState(this, () {
                       currentDate = DateTime(
                         currentDate.year,
                         currentDate.month - 1,
                         1,
                       );
+                      _selectedDay = null;
                     });
                   },
-                  child: Icon(Icons.arrow_back_ios,color: Color(0xFF12272F),),
+                  child: Icon(Icons.arrow_back_ios, color: Color(0xFF12272F)),
                 ),
 
                 Text(
                   DateFormat('MMMM yyyy').format(currentDate),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: Color(0xFF12272F)),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF12272F),
+                  ),
                 ),
                 GestureDetector(
                   onTap: () {
-                    setState(() {
+                     safeSetState(this, () {
                       currentDate = DateTime(
                         currentDate.year,
                         currentDate.month + 1,
                         1,
                       );
+                      _selectedDay = null;
                     });
                   },
-                  child: Icon(Icons.arrow_forward_ios,color: Color(0xFF12272F),),
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    color: Color(0xFF12272F),
+                  ),
                 ),
               ],
             ),
@@ -72,7 +87,10 @@ class _MonthlyCalendarState extends State<MonthlyCalendar> {
                       child: Center(
                         child: Text(
                           day,
-                          style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF12272F)),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF12272F),
+                          ),
                         ),
                       ),
                     ),
@@ -100,18 +118,40 @@ class _MonthlyCalendarState extends State<MonthlyCalendar> {
                       currentDate.month == DateTime.now().month &&
                       currentDate.year == DateTime.now().year;
 
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: isToday ? Color(0xFF12272F) : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '$dayNumber',
-                        style: TextStyle(
-                          color: isToday ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.w500,
+                  return GestureDetector(
+                    onTap: () {
+                      safeSetState(this, () {
+                        _selectedDay = dayNumber;
+                        if (widget.onDateSelected != null) {
+                          widget.onDateSelected!(
+                            DateTime(
+                              currentDate.year,
+                              currentDate.month,
+                              _selectedDay!,
+                            ),
+                          );
+                        }
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isToday
+                            ? Color(0xFF12272F)
+                            : (_selectedDay == dayNumber
+                                  ? Colors.blue
+                                  : Colors.white),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$dayNumber',
+                          style: TextStyle(
+                            color: (isToday || _selectedDay == dayNumber)
+                                ? Colors.white
+                                : Colors.black,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),

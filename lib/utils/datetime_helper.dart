@@ -23,4 +23,8 @@ class DateHelper {
 
     return "$dayName ${dayNumber}${suffix(now.day)} $monthName";
   }
+  static String formatTime(int hour, int minute) {
+    final dt = DateTime(0, 0, 0, hour, minute);
+    return DateFormat('hh:mm a').format(dt); // example: 04:35 PM
+  }
 }

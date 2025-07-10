@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo/screens/taskadd.dart';
-import 'package:todo/utils/date_helper.dart';
+import 'package:todo/utils/datetime_helper.dart';
+import 'package:todo/utils/methodhelper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("${DateHelper.getFormattedTodayDate()}"),
+                        Text(DateHelper.getFormattedTodayDate()),
                         Icon(Icons.more_horiz),
                       ],
                     ),
@@ -131,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     return GestureDetector(
                       onTap: () {
-                        setState(() {
+                         safeSetState(this, () {
                           selectedIndex = index;
                         });
                       },
