@@ -1,0 +1,127 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+class MonthlyCalendar extends StatefulWidget {
+  @override
+  _MonthlyCalendarState createState() => _MonthlyCalendarState();
+}
+
+class _MonthlyCalendarState extends State<MonthlyCalendar> {
+  DateTime currentDate = DateTime.now();
+
+  @override
+  Widget build(BuildContext context) {
+    final firstDayOfMonth = DateTime(currentDate.year, currentDate.month, 1);
+    final totalDaysInMonth = DateTime(
+      currentDate.year,
+      currentDate.month + 1,
+      0,
+    ).day;
+    final startingWeekday = firstDayOfMonth.weekday % 7;
+    final leadingEmptyCells = startingWeekday;
+    final totalCells = leadingEmptyCells + totalDaysInMonth;
+
+    return SafeArea(
+      child: Container(
+        padding: EdgeInsets.all(16),
+        color: Color(0xFFF9F9F9),
+        child: Column(
+          children: [
+            // Month header with button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      currentDate = DateTime(
+                        currentDate.year,
+                        currentDate.month - 1,
+                        1,
+                      );
+                    });
+                  },
+                  child: Icon(Icons.arrow_back_ios,color: Color(0xFF12272F),),
+                ),
+
+                Text(
+                  DateFormat('MMMM yyyy').format(currentDate),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: Color(0xFF12272F)),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      currentDate = DateTime(
+                        currentDate.year,
+                        currentDate.month + 1,
+                        1,
+                      );
+                    });
+                  },
+                  child: Icon(Icons.arrow_forward_ios,color: Color(0xFF12272F),),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            // Weekday labels
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                  .map(
+                    (day) => Expanded(
+                      child: Center(
+                        child: Text(
+                          day,
+                          style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF12272F)),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+            SizedBox(height: 8),
+            // Grid for days
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+              ),
+              itemCount: totalCells,
+              itemBuilder: (context, index) {
+                if (index < leadingEmptyCells) {
+                  return Container();
+                } else {
+                  final dayNumber = index - leadingEmptyCells + 1;
+                  final isToday =
+                      dayNumber == DateTime.now().day &&
+                      currentDate.month == DateTime.now().month &&
+                      currentDate.year == DateTime.now().year;
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: isToday ? Color(0xFF12272F) : Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$dayNumber',
+                        style: TextStyle(
+                          color: isToday ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
