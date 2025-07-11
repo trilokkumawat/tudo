@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class DateTimeHelper {
@@ -32,5 +33,11 @@ class DateTimeHelper {
   static String formatDate(String isoDateString) {
     final dateTime = DateTime.parse(isoDateString);
     return DateFormat("MMM dd, yyyy").format(dateTime);
+  }
+
+  static TimeOfDay parseTimeOfDay(String timeString) {
+    final format = DateFormat('hh:mm a'); // ex: 04:35 PM
+    final DateTime dt = format.parse(timeString);
+    return TimeOfDay(hour: dt.hour, minute: dt.minute);
   }
 }

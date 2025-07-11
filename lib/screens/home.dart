@@ -182,15 +182,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   final allTasks = snapshot.data!.docs;
                   List filteredTasks;
 
-                  if (selectedIndex == 1) { // Complete
-                    filteredTasks = allTasks.where((doc) =>
-                      (doc.data() as Map<String, dynamic>)['status'] == 'complete'
-                    ).toList();
-                  } else if (selectedIndex == 2) { // Active
-                    filteredTasks = allTasks.where((doc) =>
-                      (doc.data() as Map<String, dynamic>)['status'] == 'active'
-                    ).toList();
-                  } else { // All
+                  if (selectedIndex == 1) {
+                    // Complete
+                    filteredTasks = allTasks
+                        .where(
+                          (doc) =>
+                              (doc.data() as Map<String, dynamic>)['status'] ==
+                              'complete',
+                        )
+                        .toList();
+                  } else if (selectedIndex == 2) {
+                    // Active
+                    filteredTasks = allTasks
+                        .where(
+                          (doc) =>
+                              (doc.data() as Map<String, dynamic>)['status'] ==
+                              'active',
+                        )
+                        .toList();
+                  } else {
+                    // All
                     filteredTasks = allTasks;
                   }
 
@@ -243,18 +254,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                     children: [
                                       GestureDetector(
                                         onTap: () async {
-                                          if(task["status"]=="active"){
+                                          if (task["status"] == "active") {
                                             await _firestore.updateData(
-                                            "task",
-                                            docId,
-                                            {"status": "complete"},
-                                          );
-                                          }else{
-                                             await _firestore.updateData(
-                                            "task",
-                                            docId,
-                                            {"status": "active"},
-                                          );
+                                              "task",
+                                              docId,
+                                              {"status": "complete"},
+                                            );
+                                          } else {
+                                            await _firestore.updateData(
+                                              "task",
+                                              docId,
+                                              {"status": "active"},
+                                            );
                                           }
                                         },
                                         child: Icon(
@@ -265,7 +276,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       .toString()
                                                       .isNotEmpty &&
                                                   data['status'] == "complete"
-                                              ? Icons.radio_button_checked_outlined
+                                              ? Icons
+                                                    .radio_button_checked_outlined
                                               : Icons.radio_button_unchecked,
                                           color: Color(0xFF12272F),
                                         ),
@@ -276,13 +288,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           if (data != null &&
-                                              data.containsKey('intervel') &&
-                                              data['intervel'] != null &&
-                                              data['intervel']
+                                              data.containsKey('time') &&
+                                              data['time'] != null &&
+                                              data['time']
                                                   .toString()
                                                   .isNotEmpty)
                                             Text(
-                                              data['intervel'],
+                                              data['time'],
                                               style: TextStyle(
                                                 color: Color(0xFF12272F),
                                               ),
@@ -308,10 +320,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceAround,
                                     children: [
-                                      Text(
-                                        "Edit",
-                                        style: TextStyle(
-                                          color: Color(0xFF12272F),
+                                      Visibility(
+                                        visible: data!["status"] != "complete",
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    TaskAddScreen(
+                                                      taskedit: data,
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                          child: Text(
+                                            "Edit",
+                                            style: TextStyle(
+                                              color: Color(0xFF12272F),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                       if (data != null &&
@@ -328,7 +356,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               Align(
                                 alignment: Alignment.bottomRight,
-                                child: Text(DateTimeHelper.formatDate(task["created_at"]),style: TextStyle(fontSize: 10,fontWeight: FontWeight.w300),))
+                                child: Text(
+                                  DateTimeHelper.formatDate(task["created_at"]),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),

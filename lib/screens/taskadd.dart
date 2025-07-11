@@ -6,7 +6,8 @@ import 'package:todo/utils/datetime_helper.dart';
 import 'package:todo/utils/methodhelper.dart';
 
 class TaskAddScreen extends StatefulWidget {
-  const TaskAddScreen({super.key});
+  final Map<String, dynamic>? taskedit;
+  const TaskAddScreen({super.key, this.taskedit});
 
   @override
   State<TaskAddScreen> createState() => _TaskAddScreenState();
@@ -21,6 +22,18 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
   final TextEditingController _taskController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final FirestoreService firestoreService = FirestoreService();
+
+  @override
+  void initState() {
+    if (widget.taskedit != null) {
+      print(widget.taskedit);
+      _taskController.text = widget.taskedit!["task"];
+      _notesController.text = widget.taskedit!["notes"];
+      selectedTime = widget.taskedit!["time"];
+      selectedAlaram = widget.taskedit!["alarm"];
+    }
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -167,15 +180,20 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                                   onTap: () async {
                                     TimeOfDay? picked = await showTimePicker(
                                       context: context,
-                                      initialTime: TimeOfDay.now(),
+                                      initialTime: selectedTime != null
+                                          ? DateTimeHelper.parseTimeOfDay(
+                                              selectedTime!,
+                                            )
+                                          : TimeOfDay.now(),
                                     );
 
                                     if (picked != null) {
                                       // Format using external class
-                                      String formatted = DateTimeHelper.formatTime(
-                                        picked.hour,
-                                        picked.minute,
-                                      );
+                                      String formatted =
+                                          DateTimeHelper.formatTime(
+                                            picked.hour,
+                                            picked.minute,
+                                          );
 
                                       safeSetState(this, () {
                                         selectedTime = formatted;
@@ -212,11 +230,15 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                                     ),
                                     GestureDetector(
                                       onTap: () async {
-                                        TimeOfDay? picked =
-                                            await showTimePicker(
-                                              context: context,
-                                              initialTime: TimeOfDay.now(),
-                                            );
+                                        TimeOfDay?
+                                        picked = await showTimePicker(
+                                          context: context,
+                                          initialTime: selectedAlaram != null
+                                              ? DateTimeHelper.parseTimeOfDay(
+                                                  selectedAlaram!,
+                                                )
+                                              : TimeOfDay.now(),
+                                        );
 
                                         if (picked != null) {
                                           // Format using external class
@@ -267,9 +289,11 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                             "task": _taskController.text,
                             "notes": _notesController.text,
                             "alarm": selectedAlaram,
-                            "intervel": selectedTime,
-                            "created_at":DateTime.now().toUtc().toIso8601String(),
-                            "status":"active"
+                            "time": selectedTime,
+                            "created_at": DateTime.now()
+                                .toUtc()
+                                .toIso8601String(),
+                            "status": "active",
                           });
                           Navigator.pop(context);
                           // ignore: use_build_context_synchronously
