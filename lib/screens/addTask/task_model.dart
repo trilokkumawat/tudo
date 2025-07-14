@@ -142,11 +142,11 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
           minute,
         );
 
-        if (reminderDateTime.isBefore(DateTime.now())) {
+        if (reminderDateTime.isAfter(DateTime.now())) {
           final notificationId =
               reminderDateTime.millisecondsSinceEpoch ~/ 1000;
           print(
-            "Scheduling notification for " +
+            "Scheduling notification for" +
                 reminderDateTime.toString() +
                 " : " +
                 selectedreminder! +
@@ -159,8 +159,8 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
           );
           await NotificationHelper.scheduleNotification(
             id: notificationId,
-            title: "Task Reminder",
-            body: taskController.text,
+            title: taskController.text + "Reminder",
+            body: notesController.text,
             scheduledDate: reminderDateTime,
           );
         } else {

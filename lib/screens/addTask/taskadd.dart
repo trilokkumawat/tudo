@@ -58,16 +58,7 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                       onTap: () => context.go('/'),
                       child: Icon(Icons.arrow_back),
                     ),
-                    Row(
-                      children: [
-                        Icon(Icons.more_horiz),
-                        SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () => context.go('/'),
-                          child: Icon(Icons.close, color: Colors.red),
-                        ),
-                      ],
-                    ),
+                    Row(children: [Icon(Icons.more_horiz)]),
                   ],
                 ),
                 Row(
