@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:todo/flutter_flow_model.dart';
 import 'package:todo/screens/addTask/task_model.dart';
-import 'package:todo/screens/monthlycalendar.dart';
+import 'package:todo/components/monthlycalendar.dart';
 import 'package:todo/utils/datetime_helper.dart';
 import 'package:todo/utils/methodhelper.dart';
 import 'package:todo/utils/notification_helper.dart';
@@ -306,7 +306,17 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                             // Set notification if reminder time and date are selected
                             if (_model.selectedreminder != null &&
                                 _model.selectedDate != null) {
-                              await _model.setReminder();
+                              await _model.setReminder(
+                                _model.selectedreminder,
+                                "reminder",
+                              );
+                            }
+                            if (_model.selectedTime != null &&
+                                _model.selectedDate != null) {
+                              await _model.setReminder(
+                                _model.selectedTime,
+                                "time",
+                              );
                             }
 
                             context.go('/');

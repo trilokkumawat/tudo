@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:todo/components/task_card.dart';
 import 'package:todo/flutter_flow_model.dart';
 import 'package:todo/screens/home/home_model.dart';
+import 'package:todo/screens/taskmenu/taskmenu.dart';
 import 'package:todo/utils/datetime_helper.dart';
 import 'package:todo/utils/methodhelper.dart';
 import 'package:todo/services/auth_service.dart';
@@ -292,18 +294,43 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: GestureDetector(
-        onTap: () => context.go('/add-task'),
-        child: Container(
-          height: 50,
-          width: 50,
-          decoration: BoxDecoration(
-            color: Color(0xFF12272F),
-            borderRadius: BorderRadius.circular(50),
+      floatingActionButton: SpeedDial(
+        icon: Icons.add,
+        activeIcon: Icons.close,
+        backgroundColor: Color(0xFF12272F),
+        iconTheme: IconThemeData(color: Colors.white),
+        children: [
+          SpeedDialChild(
+            child: Icon(Icons.add, color: Color(0xFF12272F)),
+            label: 'Add Task',
+            onTap: () => context.go('/add-task'),
           ),
-          child: Icon(Icons.add, color: Colors.white),
-        ),
+          SpeedDialChild(
+            child: Icon(Icons.timer_rounded, color: Color(0xFF12272F)),
+            label: 'Timer',
+            onTap: () => context.go('/timer-task'),
+          ),
+          SpeedDialChild(
+            child: Icon(Icons.check, color: Color(0xFF12272F)),
+            label: 'Mark Complete',
+            onTap: () {
+              // Handle mark complete
+            },
+          ),
+        ],
       ),
+      // GestureDetector(
+      //
+      //   child: Container(
+      //     height: 50,
+      //     width: 50,
+      //     decoration: BoxDecoration(
+      //       color: Color(0xFF12272F),
+      //       borderRadius: BorderRadius.circular(50),
+      //     ),
+      //     child: Icon(Icons.add, color: Colors.white),
+      //   ),
+      // ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }

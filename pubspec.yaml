@@ -46,6 +46,8 @@ dependencies:
   flutter_local_notifications: ^16.3.2
   permission_handler: ^11.3.1
   provider: ^6.1.5
+  flutter_speed_dial: ^7.0.0
+  audioplayers: ^6.5.0
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +75,7 @@ flutter:
   assets:
     - assets/images/
     - assets/audio/
+    - assets/audio/countdown.mp3
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

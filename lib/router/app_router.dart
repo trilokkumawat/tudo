@@ -6,9 +6,10 @@ import 'package:todo/screens/onboarding/onboarding_screen.dart';
 import 'package:todo/screens/onboarding/user_profile_screen.dart';
 import 'package:todo/screens/home/home.dart';
 import 'package:todo/screens/addTask/taskadd.dart';
-import 'package:todo/screens/monthlycalendar.dart';
+import 'package:todo/components/monthlycalendar.dart';
 import 'package:todo/screens/profile_screen.dart';
 import 'package:todo/screens/settings_screen.dart';
+import 'package:todo/screens/time/timescreen.dart';
 import 'package:todo/services/onboarding_service.dart';
 
 class AppRouter {
@@ -153,6 +154,11 @@ class AppRouter {
             path: 'settings',
             name: 'settings',
             builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: 'timer-task',
+            name: 'timer-task',
+            builder: (context, state) => TimerScreen(),
           ),
         ],
       ),

@@ -117,9 +117,9 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
     await Alarm.set(alarmSettings: alarmSettings);
   }
 
-  setReminder() async {
+  setReminder(remindersetIs, isType) async {
     try {
-      String original = selectedreminder!.toLowerCase().trim();
+      String original = remindersetIs!.toLowerCase().trim();
       bool isPM = original.contains("pm");
       bool isAM = original.contains("am");
 
@@ -159,7 +159,8 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
           );
           await NotificationHelper.scheduleNotification(
             id: notificationId,
-            title: taskController.text + "Reminder",
+            title:
+                "${taskController.text} ${isType == "reminder" ? "reminder" : "your task was due"}",
             body: notesController.text,
             scheduledDate: reminderDateTime,
           );
