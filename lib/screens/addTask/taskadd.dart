@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:todo/backend/firebaes/firebase_service.dart';
+import 'package:go_router/go_router.dart';
+import 'package:todo/flutter_flow_model.dart';
+import 'package:todo/screens/addTask/task_model.dart';
 import 'package:todo/screens/monthlycalendar.dart';
 import 'package:todo/utils/datetime_helper.dart';
 import 'package:todo/utils/methodhelper.dart';
+import 'package:todo/utils/notification_helper.dart';
 
 class TaskAddScreen extends StatefulWidget {
   final Map<String, dynamic>? taskedit;
@@ -14,31 +17,26 @@ class TaskAddScreen extends StatefulWidget {
 }
 
 class _TaskAddScreenState extends State<TaskAddScreen> {
-  String? selectedTime;
-  String? selectedAlaram;
-  DateTime? _selectedDate;
-
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _taskController = TextEditingController();
-  final TextEditingController _notesController = TextEditingController();
-  final FirestoreService firestoreService = FirestoreService();
+  late TaskModel _model;
 
   @override
   void initState() {
-    if (widget.taskedit != null) {
-      print(widget.taskedit);
-      _taskController.text = widget.taskedit!["task"];
-      _notesController.text = widget.taskedit!["notes"];
-      selectedTime = widget.taskedit!["time"];
-      selectedAlaram = widget.taskedit!["alarm"];
+    _model = createModel(context, () => TaskModel());
+
+    if (widget.taskedit != null && widget.taskedit!.isNotEmpty) {
+      _model.editdatacatch(widget.taskedit);
+    } else {
+      _model.selectedDate = DateTime.now();
     }
+
     super.initState();
   }
 
   @override
   void dispose() {
-    _taskController.dispose();
-    _notesController.dispose();
+    _model.taskController.dispose();
+    _model.notesController.dispose();
     super.dispose();
   }
 
@@ -57,13 +55,21 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => context.go('/'),
                       child: Icon(Icons.arrow_back),
                     ),
-                    Icon(Icons.more_horiz),
+                    Row(
+                      children: [
+                        Icon(Icons.more_horiz),
+                        SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => context.go('/'),
+                          child: Icon(Icons.close, color: Colors.red),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -78,12 +84,14 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                     Text(DateTimeHelper.getFormattedTodayDate()),
                   ],
                 ),
+
                 SizedBox(height: 10),
                 // Calendar
                 MonthlyCalendar(
+                  alreadyselectdate: _model.selectedDate,
                   onDateSelected: (selectedDate) {
                     setState(() {
-                      _selectedDate = selectedDate;
+                      _model.selectedDate = selectedDate;
                     });
                   },
                 ),
@@ -120,7 +128,7 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                           ),
                         ),
                         TextFormField(
-                          controller: _taskController,
+                          controller: _model.taskController,
                           decoration: InputDecoration(
                             hintText: "Task Write...",
                             enabledBorder: UnderlineInputBorder(
@@ -149,7 +157,7 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                           ),
                         ),
                         TextFormField(
-                          controller: _notesController,
+                          controller: _model.notesController,
                           decoration: InputDecoration(
                             hintText: "Notes Write...",
                             enabledBorder: UnderlineInputBorder(
@@ -180,9 +188,9 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                                   onTap: () async {
                                     TimeOfDay? picked = await showTimePicker(
                                       context: context,
-                                      initialTime: selectedTime != null
+                                      initialTime: _model.selectedTime != null
                                           ? DateTimeHelper.parseTimeOfDay(
-                                              selectedTime!,
+                                              _model.selectedTime!,
                                             )
                                           : TimeOfDay.now(),
                                     );
@@ -196,7 +204,7 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                                           );
 
                                       safeSetState(this, () {
-                                        selectedTime = formatted;
+                                        _model.selectedTime = formatted;
                                       });
                                     }
                                   },
@@ -209,56 +217,55 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                                           fontSize: 18,
                                         ),
                                       ),
-                                      Icon(Icons.watch_later_outlined),
+                                      Icon(Icons.timelapse_sharp),
                                     ],
                                   ),
                                 ),
-                                Text(selectedTime ?? ""),
+                                Text(_model.selectedTime ?? ""),
                               ],
                             ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      "Alarm",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 18,
+                                GestureDetector(
+                                  onTap: () async {
+                                    TimeOfDay? picked = await showTimePicker(
+                                      context: context,
+                                      initialTime:
+                                          _model.selectedreminder != null
+                                          ? DateTimeHelper.parseTimeOfDay(
+                                              _model.selectedreminder!,
+                                            )
+                                          : TimeOfDay.now(),
+                                    );
+
+                                    if (picked != null) {
+                                      // Format using external class
+                                      String formatted =
+                                          DateTimeHelper.formatTime(
+                                            picked.hour,
+                                            picked.minute,
+                                          );
+
+                                      safeSetState(this, () {
+                                        _model.selectedreminder = formatted;
+                                      });
+                                    }
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        "Reminders",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 18,
+                                        ),
                                       ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () async {
-                                        TimeOfDay?
-                                        picked = await showTimePicker(
-                                          context: context,
-                                          initialTime: selectedAlaram != null
-                                              ? DateTimeHelper.parseTimeOfDay(
-                                                  selectedAlaram!,
-                                                )
-                                              : TimeOfDay.now(),
-                                        );
-
-                                        if (picked != null) {
-                                          // Format using external class
-                                          String formatted =
-                                              DateTimeHelper.formatTime(
-                                                picked.hour,
-                                                picked.minute,
-                                              );
-
-                                          safeSetState(this, () {
-                                            selectedAlaram = formatted;
-                                          });
-                                        }
-                                      },
-                                      child: Icon(Icons.watch_later_outlined),
-                                    ),
-                                  ],
+                                      Icon(Icons.watch_later),
+                                    ],
+                                  ),
                                 ),
-
-                                Text(selectedAlaram ?? ""),
+                                Text(_model.selectedreminder ?? ""),
                               ],
                             ),
                           ],
@@ -284,33 +291,53 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                     ),
                     onPressed: () async {
                       if (_formKey.currentState?.validate() ?? false) {
-                        try {
-                          await firestoreService.addData("task", {
-                            "task": _taskController.text,
-                            "notes": _notesController.text,
-                            "alarm": selectedAlaram,
-                            "time": selectedTime,
-                            "created_at": DateTime.now()
-                                .toUtc()
-                                .toIso8601String(),
-                            "status": "active",
-                          });
-                          Navigator.pop(context);
+                        if (widget.taskedit != null &&
+                            widget.taskedit!.containsKey("docId")) {
+                          await _model.taskPerform(
+                            typeIs: "UPDATE",
+                            docid: widget.taskedit!["docId"],
+                          );
+                          context.go('/');
                           // ignore: use_build_context_synchronously
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Successfully added!")),
                           );
-                        } catch (e) {
-                          print("Failed to add: $e");
-                          // ignore: use_build_context_synchronously
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Failed to add: $e")),
-                          );
+                        } else {
+                          try {
+                            await _model.taskPerform(typeIs: "ADD");
+
+                            // Set alarm if alarm time and date are selected
+                            if (_model.selectedAlaram != null &&
+                                _model.selectedDate != null) {
+                              await _model.setalarm();
+                            }
+
+                            // Set notification if reminder time and date are selected
+                            if (_model.selectedreminder != null &&
+                                _model.selectedDate != null) {
+                              await _model.setReminder();
+                            }
+
+                            context.go('/');
+                            // ignore: use_build_context_synchronously
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Successfully added!")),
+                            );
+                          } catch (e) {
+                            print("Failed to add: $e");
+                            // ignore: use_build_context_synchronously
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Failed to add: $e")),
+                            );
+                          }
                         }
                       }
                     },
                     child: Text(
-                      "Add Task",
+                      widget.taskedit != null &&
+                              widget.taskedit!.containsKey("docId")
+                          ? "Update Task"
+                          : "Add Task",
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

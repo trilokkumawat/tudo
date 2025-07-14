@@ -4,8 +4,10 @@ import 'package:todo/utils/methodhelper.dart';
 
 class MonthlyCalendar extends StatefulWidget {
   final Function(DateTime selectedDate)? onDateSelected;
+  final DateTime? alreadyselectdate;
 
-  const MonthlyCalendar({Key? key, this.onDateSelected}) : super(key: key);
+  const MonthlyCalendar({Key? key, this.onDateSelected, this.alreadyselectdate})
+    : super(key: key);
 
   @override
   _MonthlyCalendarState createState() => _MonthlyCalendarState();
@@ -14,6 +16,11 @@ class MonthlyCalendar extends StatefulWidget {
 class _MonthlyCalendarState extends State<MonthlyCalendar> {
   DateTime currentDate = DateTime.now();
   int? _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +34,14 @@ class _MonthlyCalendarState extends State<MonthlyCalendar> {
     final leadingEmptyCells = startingWeekday;
     final totalCells = leadingEmptyCells + totalDaysInMonth;
 
+    // Helper: is this day the already selected date?
+    bool isAlreadySelectedDate(int day) {
+      if (widget.alreadyselectdate == null) return false;
+      return widget.alreadyselectdate!.year == currentDate.year &&
+          widget.alreadyselectdate!.month == currentDate.month &&
+          widget.alreadyselectdate!.day == day;
+    }
+
     return SafeArea(
       child: Container(
         padding: EdgeInsets.all(16),
@@ -39,7 +54,7 @@ class _MonthlyCalendarState extends State<MonthlyCalendar> {
               children: [
                 GestureDetector(
                   onTap: () {
-                     safeSetState(this, () {
+                    safeSetState(this, () {
                       currentDate = DateTime(
                         currentDate.year,
                         currentDate.month - 1,
@@ -61,7 +76,7 @@ class _MonthlyCalendarState extends State<MonthlyCalendar> {
                 ),
                 GestureDetector(
                   onTap: () {
-                     safeSetState(this, () {
+                    safeSetState(this, () {
                       currentDate = DateTime(
                         currentDate.year,
                         currentDate.month + 1,
@@ -117,6 +132,23 @@ class _MonthlyCalendarState extends State<MonthlyCalendar> {
                       dayNumber == DateTime.now().day &&
                       currentDate.month == DateTime.now().month &&
                       currentDate.year == DateTime.now().year;
+                  final isSelected = _selectedDay == dayNumber;
+                  final isAlreadySelected = isAlreadySelectedDate(dayNumber);
+
+                  Color cellColor;
+                  if (isToday) {
+                    cellColor = Color(0xFF12272F);
+                  } else if (isSelected) {
+                    cellColor = Colors.blue;
+                  } else if (isAlreadySelected) {
+                    cellColor = Colors.blue;
+                  } else {
+                    cellColor = Colors.white;
+                  }
+
+                  Color textColor = (isToday || isSelected || isAlreadySelected)
+                      ? Colors.white
+                      : Colors.black;
 
                   return GestureDetector(
                     onTap: () {
@@ -135,11 +167,7 @@ class _MonthlyCalendarState extends State<MonthlyCalendar> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isToday
-                            ? Color(0xFF12272F)
-                            : (_selectedDay == dayNumber
-                                  ? Colors.blue
-                                  : Colors.white),
+                        color: cellColor,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.grey.shade300),
                       ),
@@ -147,9 +175,7 @@ class _MonthlyCalendarState extends State<MonthlyCalendar> {
                         child: Text(
                           '$dayNumber',
                           style: TextStyle(
-                            color: (isToday || _selectedDay == dayNumber)
-                                ? Colors.white
-                                : Colors.black,
+                            color: textColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),

@@ -63,6 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '520753114225',
     projectId: 'todo-d1233',
     storageBucket: 'todo-d1233.firebasestorage.app',
+    iosClientId: '520753114225-nmnsseluqq48bkhnvpkgsoqdjkhm2f56.apps.googleusercontent.com',
     iosBundleId: 'com.example.todo',
   );
 
@@ -72,6 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '520753114225',
     projectId: 'todo-d1233',
     storageBucket: 'todo-d1233.firebasestorage.app',
+    iosClientId: '520753114225-nmnsseluqq48bkhnvpkgsoqdjkhm2f56.apps.googleusercontent.com',
     iosBundleId: 'com.example.todo',
   );
 
@@ -83,4 +85,5 @@ class DefaultFirebaseOptions {
     authDomain: 'todo-d1233.firebaseapp.com',
     storageBucket: 'todo-d1233.firebasestorage.app',
   );
+
 }
