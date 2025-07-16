@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todo/components/custom_button.dart';
-import 'package:todo/screens/time/stopwatch.dart/stopwatch_controller.dart';
+import 'package:todo/screens/timer/stopwatch.dart/stopwatch_controller.dart';
 import 'package:todo/flutter_flow_model.dart';
 import 'package:provider/provider.dart';
 

@@ -3,6 +3,9 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/material.dart';
 
+// Add a custom enum for repeat types
+enum CustomRepeatType { none, hourly, daily, weekly, monthly }
+
 class NotificationHelper {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -61,39 +64,100 @@ class NotificationHelper {
     required int id,
     required String title,
     required String body,
-    required DateTime scheduledDate,
+    DateTime? scheduledDate,
     String? payload, // Add payload for navigation/data
+    required String type, // 'exact' or 'interval'
+    CustomRepeatType repeatType = CustomRepeatType.none,
   }) async {
     await initialize();
-    await _notificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'reminder_channel',
-          'Reminders',
-          channelDescription: 'Task reminders',
-          importance: Importance.max,
-          priority: Priority.high,
-          sound: RawResourceAndroidNotificationSound('alarm'),
-        ),
-        // iOS: DarwinNotificationDetails(),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          sound: 'alarm.caf', // For iOS, see below
-        ),
-        macOS: DarwinNotificationDetails(),
+    final notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'reminder_channel',
+        'Reminders',
+        channelDescription: 'Task reminders',
+        importance: Importance.max,
+        priority: Priority.high,
+        sound: RawResourceAndroidNotificationSound('alarm'),
       ),
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.dateAndTime,
-      payload: payload,
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        sound: 'alarm.caf',
+      ),
+      macOS: DarwinNotificationDetails(),
     );
+    if (type == "exact" && scheduledDate != null) {
+      await _notificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledDate, tz.local),
+        notificationDetails,
+        androidAllowWhileIdle: true,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.dateAndTime,
+        payload: payload,
+      );
+    } else if (type == "interval") {
+      switch (repeatType) {
+        case CustomRepeatType.hourly:
+          await _notificationsPlugin.periodicallyShow(
+            id,
+            title,
+            body,
+            RepeatInterval.hourly,
+            notificationDetails,
+            androidAllowWhileIdle: true,
+            payload: payload,
+          );
+          break;
+        case CustomRepeatType.daily:
+          await _notificationsPlugin.periodicallyShow(
+            id,
+            title,
+            body,
+            RepeatInterval.daily,
+            notificationDetails,
+            androidAllowWhileIdle: true,
+            payload: payload,
+          );
+          break;
+        case CustomRepeatType.weekly:
+          await _notificationsPlugin.periodicallyShow(
+            id,
+            title,
+            body,
+            RepeatInterval.weekly,
+            notificationDetails,
+            androidAllowWhileIdle: true,
+            payload: payload,
+          );
+          break;
+        case CustomRepeatType.monthly:
+          // No built-in monthly, so schedule the next one manually
+          if (scheduledDate != null) {
+            await _notificationsPlugin.zonedSchedule(
+              id,
+              title,
+              body,
+              tz.TZDateTime.from(scheduledDate, tz.local),
+              notificationDetails,
+              androidAllowWhileIdle: true,
+              uiLocalNotificationDateInterpretation:
+                  UILocalNotificationDateInterpretation.absoluteTime,
+              matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
+              payload: payload,
+            );
+          }
+          break;
+        case CustomRepeatType.none:
+        default:
+          // Do nothing or throw
+          break;
+      }
+    }
   }
 
   static Future<void> requestIOSPermissions() async {

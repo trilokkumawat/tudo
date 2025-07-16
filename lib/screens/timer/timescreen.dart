@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:todo/screens/time/countdown/countdown.dart';
-import 'package:todo/screens/time/interval/interval.dart';
-import 'package:todo/screens/time/stopwatch.dart/stopwatch.dart';
+import 'package:todo/screens/timer/countdown/countdown.dart';
+import 'package:todo/screens/timer/interval/interval.dart';
+import 'package:todo/screens/timer/stopwatch.dart/stopwatch.dart';
 
 class TimerScreen extends StatelessWidget {
   const TimerScreen({super.key});

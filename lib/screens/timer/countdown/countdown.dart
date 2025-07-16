@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo/utils/methodhelper.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:todo/screens/time/countdown/countdown_controller.dart';
+import 'package:todo/screens/timer/countdown/countdown_controller.dart';
 import 'package:todo/flutter_flow_model.dart';
 import 'package:provider/provider.dart';
 

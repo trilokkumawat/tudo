@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:todo/components/intervel_card.dart';
 import 'package:todo/flutter_flow_model.dart';
-import 'package:todo/screens/time/timercontroller.dart';
+import 'package:todo/screens/timer/timercontroller.dart';
 import 'package:todo/services/auth_service.dart';
 
 class IntervalTask {

@@ -2,6 +2,7 @@ import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:todo/utils/datetime_helper.dart';
+import 'package:todo/utils/notification_helper.dart';
 
 // Move enum to top-level
 enum RepeatType { hourly, daily, weekly, monthly, yearly }
@@ -86,88 +87,6 @@ class _IntervalCardState extends State<IntervalCard> {
     return timeColor;
   }
 
-  void _showRepeatBottomSheet(BuildContext context) async {
-    RepeatType? selectedType;
-    DateTime? repeatUntil;
-    await showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Repeat Type',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  DropdownButton<RepeatType>(
-                    value: selectedType,
-                    hint: const Text('Select repeat type'),
-                    isExpanded: true,
-                    items: RepeatType.values.map((type) {
-                      return DropdownMenuItem<RepeatType>(
-                        value: type,
-                        child: Text(
-                          type.name[0].toUpperCase() + type.name.substring(1),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (val) => setState(() => selectedType = val),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Repeat Until',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        repeatUntil == null
-                            ? 'No date selected'
-                            : '${repeatUntil!.toLocal()}'.split(' ')[0],
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: repeatUntil ?? DateTime.now(),
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null)
-                            setState(() => repeatUntil = picked);
-                        },
-                        child: const Text('Pick Date'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (widget.onRepeatChange != null) {
-                          widget.onRepeatChange!(selectedType, repeatUntil);
-                        }
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Save'),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isCompleted = widget.taskData['status'] == 'complete';
@@ -198,71 +117,12 @@ class _IntervalCardState extends State<IntervalCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row(
-            //   spacing: 3, // Remove spacing property (not valid for Row)
-            //   mainAxisSize: MainAxisSize.max,
-            //   children: [
-            //     Icon(Icons.notifications_active_outlined, size: 15),
-            //     Text(
-            //       "${widget.taskData['reminder']}",
-            //       style: TextStyle(fontSize: 12),
-            //     ),
-            //     if (widget.taskData.containsKey('time') &&
-            //         widget.taskData['time'] != null &&
-            //         widget.taskData['time'].toString().isNotEmpty)
-            //       Builder(
-            //         builder: (context) {
-            //           String timeStr = widget.taskData['time'];
-            //           var dateVal = widget.taskData['date'];
-            //           return Row(
-            //             spacing: 5,
-            //             children: [
-            //               Icon(Icons.access_time, size: 15),
-            //               Text(
-            //                 timeStr,
-            //                 style: TextStyle(
-            //                   color: _getTimeColor(timeStr, dateVal),
-            //                   fontSize: 12,
-            //                 ),
-            //               ),
-            //             ],
-            //           );
-            //         },
-            //       ),
-            //     Spacer(), // Pushes the close icon to the right
-            //     Align(
-            //       alignment: Alignment.topRight,
-            //       child: GestureDetector(
-            //         onTap: widget.onClose,
-            //         child: Container(
-            //           decoration: BoxDecoration(
-            //             color: Color(0xFF12272F),
-            //             borderRadius: BorderRadius.circular(50),
-            //           ),
-            //           child: Icon(Icons.repeat, color: Colors.white, size: 15),
-            //         ),
-            //       ),
-            //     ),
-            //   ],
-            // ),
-            // SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Left side: Icon and task info
                 Expanded(
                   child: Row(
                     children: [
-                      // GestureDetector(
-                      //   onTap: widget.onStatusToggle,
-                      //   child: Icon(
-                      //     isCompleted
-                      //         ? Icons.radio_button_checked_outlined
-                      //         : Icons.radio_button_unchecked,
-                      //     color: const Color(0xFF12272F),
-                      //   ),
-                      // ),
-                      // const SizedBox(width: 20),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,39 +161,141 @@ class _IntervalCardState extends State<IntervalCard> {
                 // Right side: Repeat icon
                 IconButton(
                   icon: const Icon(Icons.repeat, color: Color(0xFF12272F)),
-                  onPressed: () => _showRepeatBottomSheet(context),
+                  onPressed: () async {
+                    CustomRepeatType? selectedRepeatType =
+                        CustomRepeatType.hourly;
+                    DateTime selectedDate = DateTime.now();
+                    int repeatValue = 1;
+                    await showModalBottomSheet(
+                      context: context,
+                      builder: (context) {
+                        return StatefulBuilder(
+                          builder: (context, setModalState) {
+                            return Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Select Repeat Interval',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  DropdownButton<CustomRepeatType>(
+                                    value: selectedRepeatType,
+                                    items: CustomRepeatType.values
+                                        .where(
+                                          (e) => e != CustomRepeatType.none,
+                                        )
+                                        .map((type) {
+                                          return DropdownMenuItem<
+                                            CustomRepeatType
+                                          >(
+                                            value: type,
+                                            child: Text(
+                                              type.toString().split('.').last,
+                                            ),
+                                          );
+                                        })
+                                        .toList(),
+                                    onChanged: (value) {
+                                      setModalState(() {
+                                        selectedRepeatType = value;
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      const Text('Start Date: '),
+                                      TextButton(
+                                        onPressed: () async {
+                                          final picked = await showDatePicker(
+                                            context: context,
+                                            initialDate: selectedDate,
+                                            firstDate: DateTime.now(),
+                                            lastDate: DateTime(2100),
+                                          );
+                                          if (picked != null) {
+                                            setModalState(() {
+                                              selectedDate = picked;
+                                            });
+                                          }
+                                        },
+                                        child: Text(
+                                          '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      const Text('Repeat every'),
+                                      const SizedBox(width: 8),
+                                      SizedBox(
+                                        width: 50,
+                                        child: TextField(
+                                          keyboardType: TextInputType.number,
+                                          decoration: const InputDecoration(
+                                            isDense: true,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  vertical: 8,
+                                                  horizontal: 8,
+                                                ),
+                                          ),
+                                          controller: TextEditingController(
+                                            text: repeatValue.toString(),
+                                          ),
+                                          onChanged: (val) {
+                                            final parsed = int.tryParse(val);
+                                            if (parsed != null && parsed > 0) {
+                                              setModalState(() {
+                                                repeatValue = parsed;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        selectedRepeatType
+                                            .toString()
+                                            .split('.')
+                                            .last,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      await NotificationHelper.scheduleNotification(
+                                        id: 1, // Replace with unique id
+                                        title:
+                                            widget.taskData['task'] ?? 'Task',
+                                        body: widget.taskData['notes'] ?? '',
+                                        scheduledDate: selectedDate,
+                                        type: 'interval',
+                                        repeatType: selectedRepeatType!,
+                                        // You may want to add repeatValue to your notification logic if needed
+                                      );
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Set Repeat'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
                 ),
-                // Right side: Edit and alarm
-                // Column(
-                //   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                //   children: [
-                //     if (widget.showEdit && !isCompleted)
-                //       GestureDetector(
-                //         onTap: widget.onEdit,
-                //         child: const Text(
-                //           "Edit",
-                //           style: TextStyle(
-                //             color: Color(0xFF12272F),
-                //             fontWeight: FontWeight.w500,
-                //           ),
-                //         ),
-                //       ),
-                //     if (hasAlarm)
-                //       const Icon(
-                //         Icons.alarm_add_outlined,
-                //         color: Color(0xFF12272F),
-                //       ),
-                //     if (hasAlarm)
-                //       Text(
-                //         widget.taskData['alarm'],
-                //         style: const TextStyle(
-                //           fontSize: 10,
-                //           fontWeight: FontWeight.w300,
-                //           color: Colors.grey,
-                //         ),
-                //       ),
-                //   ],
-                // ),
               ],
             ),
             const SizedBox(height: 8),

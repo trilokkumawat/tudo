@@ -174,6 +174,7 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
                 "${taskController.text} ${isType == "reminder" ? "reminder" : "your task was due"}",
             body: notesController.text,
             scheduledDate: reminderDateTime,
+            type: "exact",
           );
         } else {
           print(

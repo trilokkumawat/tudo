@@ -9,7 +9,7 @@ import 'package:todo/screens/addTask/taskadd.dart';
 import 'package:todo/components/monthlycalendar.dart';
 import 'package:todo/screens/profile_screen.dart';
 import 'package:todo/screens/settings_screen.dart';
-import 'package:todo/screens/time/timescreen.dart';
+import 'package:todo/screens/timer/timescreen.dart';
 import 'package:todo/services/onboarding_service.dart';
 
 class AppRouter {
