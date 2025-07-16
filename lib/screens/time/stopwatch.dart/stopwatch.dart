@@ -1,64 +1,45 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:todo/components/custom_button.dart';
+import 'package:todo/screens/time/stopwatch.dart/stopwatch_controller.dart';
+import 'package:todo/flutter_flow_model.dart';
+import 'package:provider/provider.dart';
 
-class StopWatchScreen extends StatefulWidget {
+class StopWatchScreen extends StatelessWidget {
   const StopWatchScreen({super.key});
 
   @override
-  State<StopWatchScreen> createState() => _StopWatchScreenState();
+  Widget build(BuildContext context) {
+    return wrapWithModel<StopWatchController>(
+      model: StopWatchController(),
+      updateCallback: () => (context as Element).markNeedsBuild(),
+      child: const _StopWatchScreenBody(),
+    );
+  }
 }
 
-class _StopWatchScreenState extends State<StopWatchScreen> {
-  Timer? _timer;
-  int _elapsed = 0; // in seconds
-  bool _isRunning = false;
-  final List<String> _records = [];
+class _StopWatchScreenBody extends StatefulWidget {
+  const _StopWatchScreenBody({Key? key}) : super(key: key);
 
-  void _start() {
-    if (_isRunning) return;
-    _addRecord("Start");
-    setState(() => _isRunning = true);
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _elapsed++;
-      });
-    });
+  @override
+  State<_StopWatchScreenBody> createState() => _StopWatchScreenBodyState();
+}
+
+class _StopWatchScreenBodyState extends State<_StopWatchScreenBody> {
+  late StopWatchController _controller;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller = context.read<StopWatchController>();
   }
 
-  void _pause() {
-    if (!_isRunning) return;
-    _addRecord("Pause");
-    _timer?.cancel();
-    setState(() => _isRunning = false);
-  }
-
-  void _stop() {
-    if (_elapsed > 0) {
-      _addRecord("Stop");
-    }
-    _timer?.cancel();
-    setState(() {
-      _isRunning = false;
-      _elapsed = 0;
-    });
-  }
-
-  void _addRecord(String action) {
-    setState(() {
-      _records.add(_formatTime(_elapsed));
-    });
-  }
-
-  String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  void _update() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -86,7 +67,7 @@ class _StopWatchScreenState extends State<StopWatchScreen> {
               ),
               child: Center(
                 child: Text(
-                  _formatTime(_elapsed),
+                  _controller.formatTime(_controller.elapsed),
                   style: const TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
@@ -100,35 +81,40 @@ class _StopWatchScreenState extends State<StopWatchScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: _isRunning ? null : _start,
+                  onPressed: _controller.isRunning
+                      ? null
+                      : () => _controller.start(_update),
                   child: const Text('Start'),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
-                  onPressed: _isRunning ? _pause : null,
+                  onPressed: _controller.isRunning
+                      ? () => _controller.pause(_update)
+                      : null,
                   child: const Text('Pause'),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
-                  onPressed: _elapsed > 0 ? _stop : null,
+                  onPressed: _controller.elapsed > 0
+                      ? () => _controller.stop(_update)
+                      : null,
                   child: const Text('Stop'),
                 ),
               ],
             ),
             const SizedBox(height: 24),
             // Show only the last record
-            if (_records.isNotEmpty)
+            if (_controller.records.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
-
                   children: [
                     const Text(
                       "Last Record",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text(_records.last),
+                    Text(_controller.records.last),
                   ],
                 ),
               ),

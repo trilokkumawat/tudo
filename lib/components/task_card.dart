@@ -2,23 +2,24 @@ import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:todo/utils/datetime_helper.dart';
+import 'package:todo/screens/addTask/task_model.dart';
 
 class TaskCard extends StatefulWidget {
-  final Map<String, dynamic> taskData;
+  final TaskModel task;
   final String docId;
   final VoidCallback onStatusToggle;
   final VoidCallback onEdit;
   final bool showEdit;
-  final VoidCallback? onClose; // <-- Add this
+  final VoidCallback? onClose;
 
   const TaskCard({
     super.key,
-    required this.taskData,
+    required this.task,
     required this.docId,
     required this.onStatusToggle,
     required this.onEdit,
     this.showEdit = true,
-    this.onClose, // <-- Add this
+    this.onClose,
   });
 
   @override
@@ -26,12 +27,12 @@ class TaskCard extends StatefulWidget {
 }
 
 class _TaskCardState extends State<TaskCard> {
-  Color _getTimeColor(String timeStr, dynamic dateVal) {
+  Color _getTimeColor(String? timeStr, DateTime? dateVal) {
     DateTime now = DateTime.now();
+    if (timeStr == null) return Colors.red;
     TimeOfDay? tod;
     if (timeStr.toLowerCase().contains('am') ||
         timeStr.toLowerCase().contains('pm')) {
-      // 12-hour format
       final format = RegExp(
         r'^(\d{1,2}):(\d{2}) ?([ap]m)$',
         caseSensitive: false,
@@ -46,7 +47,6 @@ class _TaskCardState extends State<TaskCard> {
         tod = TimeOfDay(hour: hour, minute: minute);
       }
     } else {
-      // 24-hour format
       final parts = timeStr.split(":");
       if (parts.length == 2) {
         int hour = int.tryParse(parts[0]) ?? 0;
@@ -56,18 +56,10 @@ class _TaskCardState extends State<TaskCard> {
     }
     Color timeColor = Colors.red;
     if (tod != null && dateVal != null) {
-      DateTime date;
-      if (dateVal is DateTime) {
-        date = dateVal;
-      } else if (dateVal is String) {
-        date = DateTime.tryParse(dateVal) ?? now;
-      } else {
-        date = now;
-      }
       final taskDateTime = DateTime(
-        date.year,
-        date.month,
-        date.day,
+        dateVal.year,
+        dateVal.month,
+        dateVal.day,
         tod.hour,
         tod.minute,
       );
@@ -80,11 +72,8 @@ class _TaskCardState extends State<TaskCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = widget.taskData['status'] == 'complete';
-    final hasAlarm =
-        widget.taskData.containsKey('alarm') &&
-        widget.taskData['alarm'] != null &&
-        widget.taskData['alarm'].toString().isNotEmpty;
+    final isCompleted = widget.task.status == 'complete';
+    final hasAlarm = widget.task.alarm != null && widget.task.alarm!.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -109,37 +98,34 @@ class _TaskCardState extends State<TaskCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              spacing: 3, // Remove spacing property (not valid for Row)
               mainAxisSize: MainAxisSize.max,
+              // mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Icon(Icons.notifications_active_outlined, size: 15),
                 Text(
-                  "${widget.taskData['reminder']}",
+                  widget.task.reminder ?? '',
                   style: TextStyle(fontSize: 12),
                 ),
-                if (widget.taskData.containsKey('time') &&
-                    widget.taskData['time'] != null &&
-                    widget.taskData['time'].toString().isNotEmpty)
-                  Builder(
-                    builder: (context) {
-                      String timeStr = widget.taskData['time'];
-                      var dateVal = widget.taskData['date'];
-                      return Row(
-                        spacing: 5,
-                        children: [
-                          Icon(Icons.access_time, size: 15),
-                          Text(
-                            timeStr,
-                            style: TextStyle(
-                              color: _getTimeColor(timeStr, dateVal),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                Spacer(), // Pushes the close icon to the right
+                // if (widget.task.time != null && widget.task.time!.isNotEmpty)
+                //   Builder(
+                //     builder: (context) {
+                //       String? timeStr = widget.task.time;
+                //       DateTime? dateVal = widget.task.date;
+                //       return Row(
+                //         children: [
+                //           Icon(Icons.access_time, size: 15),
+                //           Text(
+                //             timeStr!,
+                //             style: TextStyle(
+                //               color: _getTimeColor(timeStr, dateVal),
+                //               fontSize: 12,
+                //             ),
+                //           ),
+                //         ],
+                //       );
+                //     },
+                //   ),
+                Spacer(),
                 Align(
                   alignment: Alignment.topRight,
                   child: GestureDetector(
@@ -159,7 +145,6 @@ class _TaskCardState extends State<TaskCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Left side: Icon and task info
                 Expanded(
                   child: Row(
                     children: [
@@ -178,21 +163,17 @@ class _TaskCardState extends State<TaskCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.taskData["task"] ?? "",
+                              widget.task.task ?? '',
                               style: TextStyle(
                                 color: const Color(0xFF12272F),
-                                // decoration: isCompleted
-                                //     ? TextDecoration.lineThrough
-                                //     : null,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            if (widget.taskData.containsKey('notes') &&
-                                widget.taskData['notes'] != null &&
-                                widget.taskData['notes'].toString().isNotEmpty)
+                            if (widget.task.notes != null &&
+                                widget.task.notes!.isNotEmpty)
                               Text(
-                                widget.taskData["notes"] ?? "",
+                                widget.task.notes ?? '',
                                 style: TextStyle(
                                   color: const Color(
                                     0xFF12272F,
@@ -208,7 +189,6 @@ class _TaskCardState extends State<TaskCard> {
                     ],
                   ),
                 ),
-                // Right side: Edit and alarm
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -229,13 +209,18 @@ class _TaskCardState extends State<TaskCard> {
                         color: Color(0xFF12272F),
                       ),
                     if (hasAlarm)
-                      Text(
-                        widget.taskData['alarm'],
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w300,
-                          color: Colors.grey,
-                        ),
+                      Builder(
+                        builder: (context) {
+                          final String alarmText = widget.task.alarm ?? '';
+                          return Text(
+                            alarmText,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w300,
+                              color: Colors.grey,
+                            ),
+                          );
+                        },
                       ),
                   ],
                 ),
@@ -245,7 +230,7 @@ class _TaskCardState extends State<TaskCard> {
             Align(
               alignment: Alignment.bottomRight,
               child: Text(
-                DateTimeHelper.formatDate(widget.taskData["created_at"]),
+                DateTimeHelper.formatDate(widget.task.createdAt ?? ''),
                 style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w300,

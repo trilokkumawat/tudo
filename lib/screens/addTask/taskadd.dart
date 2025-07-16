@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:todo/flutter_flow_model.dart';
-import 'package:todo/screens/addTask/task_model.dart';
+import 'package:todo/screens/addTask/task_controller.dart';
 import 'package:todo/components/monthlycalendar.dart';
 import 'package:todo/utils/datetime_helper.dart';
 import 'package:todo/utils/methodhelper.dart';
@@ -170,53 +170,53 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                         ),
                         SizedBox(height: 20),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                GestureDetector(
-                                  onTap: () async {
-                                    TimeOfDay? picked = await showTimePicker(
-                                      context: context,
-                                      initialTime: _model.selectedTime != null
-                                          ? DateTimeHelper.parseTimeOfDay(
-                                              _model.selectedTime!,
-                                            )
-                                          : TimeOfDay.now(),
-                                    );
+                            // Column(
+                            //   crossAxisAlignment: CrossAxisAlignment.start,
+                            //   children: [
+                            //     GestureDetector(
+                            //       onTap: () async {
+                            //         TimeOfDay? picked = await showTimePicker(
+                            //           context: context,
+                            //           initialTime: _model.selectedTime != null
+                            //               ? DateTimeHelper.parseTimeOfDay(
+                            //                   _model.selectedTime!,
+                            //                 )
+                            //               : TimeOfDay.now(),
+                            //         );
 
-                                    if (picked != null) {
-                                      // Format using external class
-                                      String formatted =
-                                          DateTimeHelper.formatTime(
-                                            picked.hour,
-                                            picked.minute,
-                                          );
+                            //         if (picked != null) {
+                            //           // Format using external class
+                            //           String formatted =
+                            //               DateTimeHelper.formatTime(
+                            //                 picked.hour,
+                            //                 picked.minute,
+                            //               );
 
-                                      safeSetState(this, () {
-                                        _model.selectedTime = formatted;
-                                      });
-                                    }
-                                  },
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        "Time",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      Icon(Icons.timelapse_sharp),
-                                    ],
-                                  ),
-                                ),
-                                Text(_model.selectedTime ?? ""),
-                              ],
-                            ),
+                            //           safeSetState(this, () {
+                            //             _model.selectedTime = formatted;
+                            //           });
+                            //         }
+                            //       },
+                            //       child: Row(
+                            //         children: [
+                            //           Text(
+                            //             "Time",
+                            //             style: TextStyle(
+                            //               fontWeight: FontWeight.w600,
+                            //               fontSize: 18,
+                            //             ),
+                            //           ),
+                            //           Icon(Icons.timelapse_sharp),
+                            //         ],
+                            //       ),
+                            //     ),
+                            //     Text(_model.selectedTime ?? ""),
+                            //   ],
+                            // ),
                             Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 GestureDetector(
                                   onTap: () async {
@@ -298,10 +298,10 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                             await _model.taskPerform(typeIs: "ADD");
 
                             // Set alarm if alarm time and date are selected
-                            if (_model.selectedAlaram != null &&
-                                _model.selectedDate != null) {
-                              await _model.setalarm();
-                            }
+                            // if (_model.selectedAlaram != null &&
+                            //     _model.selectedDate != null) {
+                            //   await _model.setalarm();
+                            // }
 
                             // Set notification if reminder time and date are selected
                             if (_model.selectedreminder != null &&
@@ -309,13 +309,6 @@ class _TaskAddScreenState extends State<TaskAddScreen> {
                               await _model.setReminder(
                                 _model.selectedreminder,
                                 "reminder",
-                              );
-                            }
-                            if (_model.selectedTime != null &&
-                                _model.selectedDate != null) {
-                              await _model.setReminder(
-                                _model.selectedTime,
-                                "time",
                               );
                             }
 

@@ -48,6 +48,7 @@ class CustomTextField extends StatelessWidget {
       enabled: enabled,
       readOnly: readOnly,
       onTap: onTap,
+      enableInteractiveSelection: false,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,

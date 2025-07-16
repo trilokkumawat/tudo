@@ -1,177 +1,115 @@
-import 'package:alarm/alarm.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:todo/backend/firebaes/firebase_service.dart';
-import 'package:todo/flutter_flow_model.dart';
-import 'package:todo/screens/addTask/taskadd.dart';
-import 'package:todo/screens/home/home.dart';
-import 'package:todo/utils/notification_helper.dart';
 
-class TaskModel extends FlutterFlowModel<TaskAddScreen> {
-  final FirestoreService firestoreService = FirestoreService();
-  final TextEditingController taskController = TextEditingController();
-  final TextEditingController notesController = TextEditingController();
-  String? selectedTime;
-  String? selectedreminder;
-  String? selectedAlaram;
-  DateTime? selectedDate;
-  @override
-  void dispose() {
-    // TODO: implement dispose
+class TaskModel {
+  String? _id;
+  String? _alarm;
+  String? _createdAt;
+  DateTime? _date;
+  String? _notes;
+  String? _reminder;
+  String? _status;
+  String? _task;
+  String? _time;
+
+  TaskModel({
+    String? id,
+    String? alarm,
+    String? createdAt,
+    DateTime? date,
+    String? notes,
+    String? reminder,
+    String? status,
+    String? task,
+    String? time,
+  }) : _id = id,
+       _alarm = alarm,
+       _createdAt = createdAt,
+       _date = date,
+       _notes = notes,
+       _reminder = reminder,
+       _status = status,
+       _task = task,
+       _time = time;
+
+  String? get id => _id;
+  String? get alarm => _alarm;
+  String? get createdAt => _createdAt;
+  DateTime? get date => _date;
+  String? get notes => _notes;
+  String? get reminder => _reminder;
+  String? get status => _status;
+  String? get task => _task;
+  String? get time => _time;
+
+  set alarm(String? value) => _alarm = value;
+  set createdAt(String? value) => _createdAt = value;
+  set date(DateTime? value) => _date = value;
+  set notes(String? value) => _notes = value;
+  set reminder(String? value) => _reminder = value;
+  set status(String? value) => _status = value;
+  set task(String? value) => _task = value;
+  set time(String? value) => _time = value;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': _id,
+      'alarm': _alarm,
+      'created_at': _createdAt,
+      'date': _date != null ? Timestamp.fromDate(_date!) : null,
+      'notes': _notes,
+      'reminder': _reminder,
+      'status': _status,
+      'task': _task,
+      'time': _time,
+    };
   }
 
-  @override
-  void initState(BuildContext context) {
-    // TODO: implement initState
-  }
-  editdatacatch(taskedit) {
-    taskController.text = taskedit!["task"];
-    notesController.text = taskedit!["notes"];
-    selectedTime = taskedit!["time"];
-    selectedAlaram = taskedit!["alarm"];
-    selectedreminder = taskedit!["reminder"];
-
-    final dateValue = taskedit!["date"];
-
-    if (dateValue is Timestamp) {
-      selectedDate = dateValue.toDate();
-    } else if (dateValue is DateTime) {
-      selectedDate = dateValue;
-    } else {
-      selectedDate = null; // or handle error
+  factory TaskModel.fromJson(Map<String, dynamic> json) {
+    DateTime? parsedDate;
+    if (json['date'] is Timestamp) {
+      parsedDate = (json['date'] as Timestamp).toDate();
+    } else if (json['date'] is String) {
+      parsedDate = DateTime.tryParse(json['date']);
     }
-  }
-
-  taskPerform({String typeIs = "", String docid = ""}) async {
-    if (typeIs == "ADD") {
-      try {
-        await firestoreService.addData("task", {
-          "task": taskController.text,
-          "notes": notesController.text,
-          "alarm": selectedAlaram,
-          "time": selectedTime,
-          "created_at": DateTime.now().toUtc().toIso8601String(),
-          "reminder": selectedreminder,
-          "status": "active",
-          "date": selectedDate,
-        });
-      } catch (e) {
-        print(e);
-      }
-    } else if (typeIs == "UPDATE") {
-      try {
-        await firestoreService.updateData("task", docid, {
-          "task": taskController.text,
-          "notes": notesController.text,
-          "alarm": selectedAlaram,
-          "time": selectedTime,
-          "created_at": DateTime.now().toUtc().toIso8601String(),
-          "reminder": selectedreminder,
-          "status": "active",
-          "date": selectedDate,
-        });
-      } catch (e) {
-        print(e);
-      }
-    }
-  }
-
-  setalarm() async {
-    try {
-      // Parse selectedAlaram (HH:mm) and combine with _selectedDate
-      final timeParts = selectedAlaram!.split(":");
-      if (timeParts.length == 2) {
-        final hour = int.tryParse(timeParts[0]) ?? 0;
-        final minute = int.tryParse(timeParts[1]) ?? 0;
-        final alarmDateTime = DateTime(
-          selectedDate!.year,
-          selectedDate!.month,
-          selectedDate!.day,
-          hour,
-          minute,
-        );
-        await setAlarm(alarmDateTime);
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  Future<void> setAlarm(DateTime dt) async {
-    await Alarm.init();
-
-    final alarmSettings = AlarmSettings(
-      id: dt.millisecondsSinceEpoch ~/ 1000, // unique id per alarm
-      dateTime: dt,
-      assetAudioPath: 'assets/audio/alarm.mp3',
-      loopAudio: true,
-      vibrate: true,
-      volumeSettings: VolumeSettings.fixed(volume: 1.0),
-      notificationSettings: NotificationSettings(
-        title: 'Task Reminder',
-        body: 'You have a task scheduled now.',
-      ),
+    return TaskModel(
+      id: json['id'] as String?,
+      alarm: json['alarm'] as String?,
+      createdAt: json['created_at'] as String?,
+      date: parsedDate,
+      notes: json['notes'] as String?,
+      reminder: json['reminder'] as String?,
+      status: json['status'] as String?,
+      task: json['task'] as String?,
+      time: json['time'] as String?,
     );
-
-    await Alarm.set(alarmSettings: alarmSettings);
   }
 
-  setReminder(remindersetIs, isType) async {
-    try {
-      String original = remindersetIs!.toLowerCase().trim();
-      bool isPM = original.contains("pm");
-      bool isAM = original.contains("am");
+  factory TaskModel.fromDocument(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return TaskModel.fromJson({...data, 'id': doc.id});
+  }
 
-      // Remove am/pm for parsing
-      String cleaned = original.replaceAll(" am", "").replaceAll(" pm", "");
-      final timeParts = cleaned.split(":");
-      if (timeParts.length == 2) {
-        int hour = int.tryParse(timeParts[0]) ?? 0;
-        int minute = int.tryParse(timeParts[1]) ?? 0;
-
-        // Convert to 24-hour format if needed
-        if (isPM && hour < 12) hour += 12;
-        if (isAM && hour == 12) hour = 0;
-
-        final reminderDateTime = DateTime(
-          selectedDate!.year,
-          selectedDate!.month,
-          selectedDate!.day,
-          hour,
-          minute,
-        );
-
-        if (reminderDateTime.isAfter(DateTime.now())) {
-          final notificationId =
-              reminderDateTime.millisecondsSinceEpoch ~/ 1000;
-          print(
-            "Scheduling notification for" +
-                reminderDateTime.toString() +
-                " : " +
-                selectedreminder! +
-                " : " +
-                hour.toString() +
-                " :: " +
-                minute.toString() +
-                ", :: " +
-                timeParts[1],
-          );
-          await NotificationHelper.scheduleNotification(
-            id: notificationId,
-            title:
-                "${taskController.text} ${isType == "reminder" ? "reminder" : "your task was due"}",
-            body: notesController.text,
-            scheduledDate: reminderDateTime,
-          );
-        } else {
-          print(
-            "Reminder time $reminderDateTime is in the past. No notification scheduled.",
-          );
-        }
-      }
-    } catch (e) {
-      print(e);
-    }
+  TaskModel copyWith({
+    String? id,
+    String? alarm,
+    String? createdAt,
+    DateTime? date,
+    String? notes,
+    String? reminder,
+    String? status,
+    String? task,
+    String? time,
+  }) {
+    return TaskModel(
+      id: id ?? _id,
+      alarm: alarm ?? _alarm,
+      createdAt: createdAt ?? _createdAt,
+      date: date ?? _date,
+      notes: notes ?? _notes,
+      reminder: reminder ?? _reminder,
+      status: status ?? _status,
+      task: task ?? _task,
+      time: time ?? _time,
+    );
   }
 }

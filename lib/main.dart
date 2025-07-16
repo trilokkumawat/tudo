@@ -8,14 +8,20 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:todo/utils/notification_helper.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+Future<void> requestAllPermissions() async {
+  await [Permission.notification].request();
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Alarm.init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationHelper.initialize();
 
+  // Request all permissions at startup
+  await requestAllPermissions();
+
   // Request notification permissions for Android 13+ and iOS
-  await Permission.notification.request();
   final plugin = FlutterLocalNotificationsPlugin();
   await plugin
       .resolvePlatformSpecificImplementation<

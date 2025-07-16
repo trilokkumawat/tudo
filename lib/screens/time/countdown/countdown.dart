@@ -1,107 +1,67 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:todo/utils/methodhelper.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:todo/screens/time/countdown/countdown_controller.dart';
+import 'package:todo/flutter_flow_model.dart';
+import 'package:provider/provider.dart';
 
-class CountDownScreen extends StatefulWidget {
+class CountDownScreen extends StatelessWidget {
   const CountDownScreen({super.key});
 
   @override
-  State<CountDownScreen> createState() => _CountDownScreenState();
+  Widget build(BuildContext context) {
+    return wrapWithModel<CountdownController>(
+      model: CountdownController(),
+      updateCallback: () => (context as Element).markNeedsBuild(),
+      child: const _CountDownScreenBody(),
+    );
+  }
 }
 
-class _CountDownScreenState extends State<CountDownScreen> {
-  int _hours = 0;
-  int _minutes = 1;
-  int _seconds = 0;
-  int _remaining = 60;
-  Timer? _timer;
-  bool _isRunning = false;
-  bool _hasStarted = false;
-  int _totalSeconds = 60; // default
-  final AudioPlayer _audioPlayer = AudioPlayer();
+class _CountDownScreenBody extends StatefulWidget {
+  const _CountDownScreenBody({Key? key}) : super(key: key);
 
-  void _startPauseResume() {
-    if (_remaining == 0) {
-      safeSetState(this, () {
-        _remaining = _hours * 3600 + _minutes * 60 + _seconds;
-        _totalSeconds = _remaining;
-        _isRunning = false;
-        _hasStarted = false;
-      });
-      return;
-    }
-    if (_isRunning) {
-      _timer?.cancel();
-      safeSetState(this, () => _isRunning = false);
-    } else {
-      safeSetState(this, () {
-        _isRunning = true;
-        _hasStarted = true;
-        if (!_hasStarted ||
-            _remaining == _hours * 3600 + _minutes * 60 + _seconds) {
-          _totalSeconds = _remaining;
-        }
-      });
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-        if (_remaining > 0) {
-          safeSetState(this, () {
-            _remaining--;
-          });
-        } else {
-          _timer?.cancel();
-          safeSetState(this, () {
-            _isRunning = false;
-            _hasStarted = false;
-            _hours = 0;
-            _minutes = 0;
-            _seconds = 0;
-            _remaining = 0;
-          });
-          // Play sound when countdown ends
-          await _audioPlayer.play(AssetSource('audio/countdown.mp3'));
-        }
-      });
-    }
+  @override
+  State<_CountDownScreenBody> createState() => _CountDownScreenBodyState();
+}
+
+class _CountDownScreenBodyState extends State<_CountDownScreenBody> {
+  late CountdownController _controller;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller = context.read<CountdownController>();
   }
 
-  String _formatTime(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-    return '${hours.toString().padLeft(2, '0')}:'
-        '${minutes.toString().padLeft(2, '0')}:'
-        '${secs.toString().padLeft(2, '0')}';
+  void _update() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _audioPlayer.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     String buttonText;
-    if (_remaining == 0) {
+    if (_controller.remaining == 0) {
       buttonText = "Start";
-    } else if (_isRunning) {
+    } else if (_controller.isRunning) {
       buttonText = "Pause";
     } else {
-      buttonText = _hasStarted ? "Resume" : "Start";
+      buttonText = _controller.hasStarted ? "Resume" : "Start";
     }
 
-    final showPickers = !_hasStarted || _remaining == 0;
+    final showPickers = !_controller.hasStarted || _controller.remaining == 0;
 
     return Scaffold(
       body: Column(
-        spacing: 10,
-        // mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (showPickers) ...[
             SizedBox(height: 10),
-
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -144,7 +104,6 @@ class _CountDownScreenState extends State<CountDownScreen> {
                 ],
               ),
             ),
-
             SizedBox(
               height: 120,
               child: Row(
@@ -158,14 +117,16 @@ class _CountDownScreenState extends State<CountDownScreen> {
                       perspective: 0.005,
                       physics: const FixedExtentScrollPhysics(),
                       controller: FixedExtentScrollController(
-                        initialItem: _hours,
+                        initialItem: _controller.hours,
                       ),
                       onSelectedItemChanged: (val) {
-                        safeSetState(this, () {
-                          _hours = val;
-                          if (!_hasStarted) {
-                            _remaining =
-                                _hours * 3600 + _minutes * 60 + _seconds;
+                        setState(() {
+                          _controller.hours = val;
+                          if (!_controller.hasStarted) {
+                            _controller.remaining =
+                                _controller.hours * 3600 +
+                                _controller.minutes * 60 +
+                                _controller.seconds;
                           }
                         });
                       },
@@ -192,14 +153,16 @@ class _CountDownScreenState extends State<CountDownScreen> {
                       perspective: 0.005,
                       physics: const FixedExtentScrollPhysics(),
                       controller: FixedExtentScrollController(
-                        initialItem: _minutes,
+                        initialItem: _controller.minutes,
                       ),
                       onSelectedItemChanged: (val) {
-                        safeSetState(this, () {
-                          _minutes = val;
-                          if (!_hasStarted) {
-                            _remaining =
-                                _hours * 3600 + _minutes * 60 + _seconds;
+                        setState(() {
+                          _controller.minutes = val;
+                          if (!_controller.hasStarted) {
+                            _controller.remaining =
+                                _controller.hours * 3600 +
+                                _controller.minutes * 60 +
+                                _controller.seconds;
                           }
                         });
                       },
@@ -226,14 +189,16 @@ class _CountDownScreenState extends State<CountDownScreen> {
                       perspective: 0.005,
                       physics: const FixedExtentScrollPhysics(),
                       controller: FixedExtentScrollController(
-                        initialItem: _seconds,
+                        initialItem: _controller.seconds,
                       ),
                       onSelectedItemChanged: (val) {
-                        safeSetState(this, () {
-                          _seconds = val;
-                          if (!_hasStarted) {
-                            _remaining =
-                                _hours * 3600 + _minutes * 60 + _seconds;
+                        setState(() {
+                          _controller.seconds = val;
+                          if (!_controller.hasStarted) {
+                            _controller.remaining =
+                                _controller.hours * 3600 +
+                                _controller.minutes * 60 +
+                                _controller.seconds;
                           }
                         });
                       },
@@ -256,10 +221,11 @@ class _CountDownScreenState extends State<CountDownScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            // Only show Start button if a non-zero countdown is set
-            if (_hours + _minutes + _seconds > 0 && !_hasStarted)
+            if (_controller.hours + _controller.minutes + _controller.seconds >
+                    0 &&
+                !_controller.hasStarted)
               ElevatedButton(
-                onPressed: _startPauseResume,
+                onPressed: () => _controller.startPauseResume(_update),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF12272F),
                   shape: RoundedRectangleBorder(
@@ -281,9 +247,10 @@ class _CountDownScreenState extends State<CountDownScreen> {
                 ),
               ),
           ] else ...[
-            // Show the currently set countdown as a list below the pickers
             SizedBox(height: 10),
-            if (!_hasStarted && (_hours + _minutes + _seconds > 0))
+            if (!_controller.hasStarted &&
+                (_controller.hours + _controller.minutes + _controller.seconds >
+                    0))
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                 child: Center(
@@ -298,9 +265,9 @@ class _CountDownScreenState extends State<CountDownScreen> {
                     ),
                     child: Text(
                       'Set: '
-                      '${_hours.toString().padLeft(2, '0')}:'
-                      '${_minutes.toString().padLeft(2, '0')}:'
-                      '${_seconds.toString().padLeft(2, '0')}',
+                      '${_controller.hours.toString().padLeft(2, '0')}:'
+                      '${_controller.minutes.toString().padLeft(2, '0')}:'
+                      '${_controller.seconds.toString().padLeft(2, '0')}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
@@ -310,7 +277,6 @@ class _CountDownScreenState extends State<CountDownScreen> {
                   ),
                 ),
               ),
-            // Circular countdown display
             Stack(
               alignment: Alignment.center,
               children: [
@@ -318,8 +284,9 @@ class _CountDownScreenState extends State<CountDownScreen> {
                   width: 180,
                   height: 180,
                   child: CircularProgressIndicator(
-                    value: _hasStarted && _totalSeconds > 0
-                        ? _remaining / _totalSeconds
+                    value:
+                        _controller.hasStarted && _controller.totalSeconds > 0
+                        ? _controller.remaining / _controller.totalSeconds
                         : 1.0,
                     strokeWidth: 10,
                     backgroundColor: Colors.grey.shade300,
@@ -329,7 +296,7 @@ class _CountDownScreenState extends State<CountDownScreen> {
                   ),
                 ),
                 Text(
-                  _formatTime(_remaining),
+                  _controller.formatTime(_controller.remaining),
                   style: const TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.bold,
@@ -338,12 +305,11 @@ class _CountDownScreenState extends State<CountDownScreen> {
               ],
             ),
             const SizedBox(height: 32),
-            // Pause/Resume/Stop buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: _startPauseResume,
+                  onPressed: () => _controller.startPauseResume(_update),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF12272F),
                     shape: RoundedRectangleBorder(
@@ -366,17 +332,7 @@ class _CountDownScreenState extends State<CountDownScreen> {
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
-                  onPressed: () {
-                    _timer?.cancel();
-                    safeSetState(this, () {
-                      _isRunning = false;
-                      _hasStarted = false;
-                      _hours = 0;
-                      _minutes = 0;
-                      _seconds = 0;
-                      _remaining = 0;
-                    });
-                  },
+                  onPressed: () => _controller.stop(_update),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     shape: RoundedRectangleBorder(

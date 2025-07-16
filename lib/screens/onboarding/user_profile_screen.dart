@@ -196,15 +196,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             labelText: 'Display Name',
                             hintText: 'Enter your display name',
                             controller: _displayNameController,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Display name is required';
-                              }
-                              if (value.trim().length < 2) {
-                                return 'Display name must be at least 2 characters';
-                              }
-                              return null;
-                            },
+                            readOnly: true,
+
+                            // validator: (value) {
+                            //   if (value == null || value.trim().isEmpty) {
+                            //     return 'Display name is required';
+                            //   }
+                            //   if (value.trim().length < 2) {
+                            //     return 'Display name must be at least 2 characters';
+                            //   }
+                            //   return null;
+                            // },
                           ),
 
                           const SizedBox(height: 16),

@@ -4,11 +4,12 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:todo/components/task_card.dart';
 import 'package:todo/flutter_flow_model.dart';
-import 'package:todo/screens/home/home_model.dart';
+import 'package:todo/screens/home/home_controller.dart';
 import 'package:todo/screens/taskmenu/taskmenu.dart';
 import 'package:todo/utils/datetime_helper.dart';
 import 'package:todo/utils/methodhelper.dart';
 import 'package:todo/services/auth_service.dart';
+import 'package:todo/screens/addTask/task_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -255,29 +256,33 @@ class _HomeScreenState extends State<HomeScreen> {
                       filteredTasks = allTasks;
                     }
 
+                    // Convert filteredTasks to TaskModel list
+                    final taskModels = filteredTasks
+                        .map((doc) => TaskModel.fromDocument(doc))
+                        .toList();
+
                     return ListView.builder(
                       shrinkWrap: true,
                       physics: const BouncingScrollPhysics(),
-                      itemCount: filteredTasks.length,
+                      itemCount: taskModels.length,
                       itemBuilder: (context, index) {
-                        final task = filteredTasks[index];
-                        final data = task.data() as Map<String, dynamic>?;
-                        final docId = task.id;
+                        final task = taskModels[index];
+                        final docId = task.id ?? '';
 
-                        if (data == null) return const SizedBox.shrink();
+                        if (task == null) return const SizedBox.shrink();
 
                         return TaskCard(
-                          taskData: data,
+                          task: task, // Pass TaskModel directly
                           docId: docId,
                           onStatusToggle: () async {
-                            if (data["status"] == "active") {
+                            if (task.status == "active") {
                               _model.updatetask(docId, "complete");
                             } else {
                               _model.updatetask(docId, "active");
                             }
                           },
-
                           onEdit: () {
+                            final data = task.toJson();
                             data["docId"] = docId;
                             context.go('/edit-task', extra: data);
                           },

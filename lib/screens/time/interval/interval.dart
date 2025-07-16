@@ -1,5 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
+import 'package:todo/components/intervel_card.dart';
+import 'package:todo/flutter_flow_model.dart';
+import 'package:todo/screens/time/timercontroller.dart';
 
 class IntervalTask {
   final String task;
@@ -33,53 +37,91 @@ class IntervalScreen extends StatefulWidget {
 }
 
 class _IntervalScreenState extends State<IntervalScreen> {
-  // Example dynamic data (could be loaded from backend)
-  final List<IntervalTask> _intervalTasks = [
-    IntervalTask(
-      task: "Drink water",
-      interval: "every 2 hours",
-      reminder: true,
-      date: DateTime.parse("2025-07-12T09:00:00Z"),
-    ),
-    IntervalTask(
-      task: "Stretch",
-      interval: "every 30 minutes",
-      reminder: false,
-      date: DateTime.parse("2025-07-12T09:30:00Z"),
-    ),
-    // Add more tasks as needed
-  ];
+  late TimerController _model;
+  @override
+  void initState() {
+    _model = createModel(context, () => TimerController());
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Intervals")),
-      body: ListView.builder(
-        itemCount: _intervalTasks.length,
-        itemBuilder: (context, index) {
-          final task = _intervalTasks[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              leading: Icon(
-                task.reminder
-                    ? Icons.notifications_active
-                    : Icons.notifications_off,
-                color: task.reminder ? Colors.green : Colors.grey,
-              ),
-              title: Text(
-                task.task,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                "${task.interval}\n${DateFormat.yMMMd().add_jm().format(task.date)}",
-                style: const TextStyle(fontSize: 13),
-              ),
-              isThreeLine: true,
-              trailing: task.reminder
-                  ? const Icon(Icons.alarm, color: Colors.blue)
-                  : null,
-            ),
+      // appBar: AppBar(title: const Text("Intervals")),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _model.firestore.getData(_model.collectionpath),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return CircularProgressIndicator();
+          final allTasks = snapshot.data!.docs;
+          // List filteredTasks;
+
+          // if (_model.selectedIndex == 1) {
+          //   // Complete
+          //   filteredTasks = allTasks
+          //       .where(
+          //         (doc) =>
+          //             (doc.data() as Map<String, dynamic>)['status'] ==
+          //             'complete',
+          //       )
+          //       .toList();
+          // } else
+          //  if (_model.selectedIndex == 2) {
+          //   // Active
+          //   filteredTasks = allTasks
+          //       .where(
+          //         (doc) =>
+          //             (doc.data() as Map<String, dynamic>)['status'] ==
+          //             'active',
+          //       )
+          //       .toList();
+          // } else {
+          //   // All
+          //   filteredTasks = allTasks;
+          // }
+          final filteredTasks = allTasks
+              .where(
+                (doc) =>
+                    (doc.data() as Map<String, dynamic>)['status'] == 'active',
+              )
+              .toList();
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const BouncingScrollPhysics(),
+            itemCount: filteredTasks.length,
+            itemBuilder: (context, index) {
+              final task = filteredTasks[index];
+              final data = task.data() as Map<String, dynamic>?;
+              final docId = task.id;
+
+              if (data == null) return const SizedBox.shrink();
+
+              return IntervalCard(
+                taskData: data,
+                docId: docId,
+                onStatusToggle: () async {
+                  if (data["status"] == "active") {
+                    _model.updatetask(docId, "complete");
+                  } else {
+                    _model.updatetask(docId, "active");
+                  }
+                },
+
+                onEdit: () {
+                  data["docId"] = docId;
+                  context.go('/edit-task', extra: data);
+                },
+                onRepeatChange: (repeatType, repeatUntil) async {
+                  await _model.firestore
+                      .updateData(_model.collectionpath, docId, {
+                        "repeat": repeatType?.name,
+                        "repeat_until": repeatUntil?.toUtc().toIso8601String(),
+                      });
+                },
+                // onClose: () {
+                //   _model.deleteTask(docId);
+                // },
+              );
+            },
           );
         },
       ),
