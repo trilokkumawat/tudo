@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo/screens/timer/countdown/countdown.dart';
 import 'package:todo/screens/timer/interval/interval.dart';
+import 'package:todo/screens/timer/interval/interval_latest.dart';
 import 'package:todo/screens/timer/stopwatch.dart/stopwatch.dart';
 
 class TimerScreen extends StatelessWidget {
@@ -71,7 +72,7 @@ class TimerScreen extends StatelessWidget {
                 children: [
                   StopWatchScreen(),
                   CountDownScreen(),
-                  IntervalScreen(),
+                  IntervalScreenLatest(),
                 ],
               ),
             ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:todo/components/custom_button.dart';
 import 'package:todo/screens/timer/stopwatch.dart/stopwatch_controller.dart';
@@ -114,7 +115,7 @@ class _StopWatchScreenBodyState extends State<_StopWatchScreenBody> {
                       "Last Record",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text(_controller.records.last),
+                    Text(_controller.formatTime(_controller.elapsed)),
                   ],
                 ),
               ),

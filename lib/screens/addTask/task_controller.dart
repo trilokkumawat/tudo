@@ -81,7 +81,7 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
           "status": "active",
           "date": selectedDate,
           // 'userId': userId, // No need, service adds it
-        });
+        }, "task");
       } catch (e) {
         print(e);
       }

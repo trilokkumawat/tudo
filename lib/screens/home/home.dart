@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
+import 'package:todo/components/custometext.dart';
 import 'package:todo/components/task_card.dart';
 import 'package:todo/flutter_flow_model.dart';
 import 'package:todo/screens/home/home_controller.dart';
-import 'package:todo/screens/taskmenu/taskmenu.dart';
 import 'package:todo/utils/datetime_helper.dart';
 import 'package:todo/utils/methodhelper.dart';
 import 'package:todo/services/auth_service.dart';
@@ -51,7 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(DateTimeHelper.getFormattedTodayDate()),
+                          CustomeText(
+                            text: DateTimeHelper.getFormattedTodayDate(),
+                          ),
                           Row(
                             children: [
                               GestureDetector(
@@ -98,12 +100,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      Text(
-                        "ToDo List",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
+                      CustomeText(
+                        text: "ToDo List",
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
                       ),
                     ],
                   ),
@@ -151,23 +151,19 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  '${date.day}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isToday
-                                        ? Color(0xFFFFFFFF)
-                                        : Colors.black,
-                                  ),
+                                CustomeText(
+                                  text: '${date.day}',
+                                  fontSize: 14,
+                                  color: isToday
+                                      ? Color(0xFFFFFFFF)
+                                      : Colors.black,
                                 ),
-                                Text(
-                                  dayName,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isToday
-                                        ? Color(0xFFFFFFFF)
-                                        : Colors.black,
-                                  ),
+                                CustomeText(
+                                  text: dayName,
+                                  fontSize: 12,
+                                  color: isToday
+                                      ? Color(0xFFFFFFFF)
+                                      : Colors.black,
                                 ),
                               ],
                             ),
@@ -207,16 +203,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                 ),
-                                child: Text(
-                                  _model.tabs[index],
-                                  style: TextStyle(
-                                    color: isActive
-                                        ? Color(0xFF12272F)
-                                        : Color.fromARGB(255, 187, 187, 187),
-                                    fontWeight: isActive
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
+                                child: CustomeText(
+                                  text: _model.tabs[index],
+                                  color: isActive
+                                      ? Color(0xFF12272F)
+                                      : Color.fromARGB(255, 187, 187, 187),
+                                  fontWeight: isActive
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               ),
                             ],
@@ -228,7 +222,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 StreamBuilder<QuerySnapshot>(
                   stream: userId != null
-                      ? _model.firestore.getUsertask(userId)
+                      ? _model.firestore.getUsertask(
+                          userId,
+                          _model.collectionpath,
+                        )
                       : const Stream.empty(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) return CircularProgressIndicator();

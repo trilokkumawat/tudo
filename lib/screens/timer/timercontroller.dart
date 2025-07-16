@@ -4,9 +4,10 @@ import 'package:todo/backend/firebaes/firebase_service.dart';
 import 'package:todo/flutter_flow_model.dart';
 import 'package:todo/screens/home/home.dart';
 import 'package:todo/screens/timer/interval/interval.dart';
+import 'package:todo/screens/timer/interval/interval_latest.dart';
 import 'package:todo/services/auth_service.dart';
 
-class TimerController extends FlutterFlowModel<IntervalScreen> {
+class TimerController extends FlutterFlowModel<IntervalScreenLatest> {
   int selectedIndex = 0;
   String collectionpath = "task";
   final FirestoreService firestore = FirestoreService();
@@ -32,6 +33,6 @@ class TimerController extends FlutterFlowModel<IntervalScreen> {
       // Return an empty stream if not logged in
       return const Stream.empty();
     }
-    return firestore.getUsertask(userId);
+    return firestore.getUsertask(userId, "task");
   }
 }

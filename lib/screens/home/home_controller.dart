@@ -30,6 +30,6 @@ class HomeModel extends FlutterFlowModel<HomeScreen> {
       // Return an empty stream if not logged in
       return const Stream.empty();
     }
-    return firestore.getUsertask(userId);
+    return firestore.getUsertask(userId, collectionpath);
   }
 }

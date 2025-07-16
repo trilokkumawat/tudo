@@ -46,19 +46,27 @@ class FirestoreService {
     String userId,
     String docId,
     Map<String, dynamic> data,
+    String collectionPath,
   ) async {
-    await _db.collection('task').doc(docId).update({...data, 'userId': userId});
+    await _db.collection(collectionPath).doc(docId).update({
+      ...data,
+      'userId': userId,
+    });
   }
 
   // Delete a task for a specific user (in 'task' collection)
-  Future<void> deleteUserTask(String userId, String docId) async {
-    await _db.collection('task').doc(docId).delete();
+  Future<void> deleteUserTask(
+    String userId,
+    String docId,
+    String collectionPath,
+  ) async {
+    await _db.collection(collectionPath).doc(docId).delete();
   }
 
   // Get all task for a specific user (from 'task' collection)
-  Stream<QuerySnapshot> getUsertask(String userId) {
+  Stream<QuerySnapshot> getUsertask(String userId, String collectionPath) {
     return _db
-        .collection('task')
+        .collection(collectionPath)
         .where('userId', isEqualTo: userId)
         .snapshots();
   }

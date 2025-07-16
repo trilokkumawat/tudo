@@ -167,4 +167,34 @@ class NotificationHelper {
         >()
         ?.requestPermissions(alert: true, badge: true, sound: true);
   }
+
+  static const int stopwatchNotificationId = 999;
+
+  static Future<void> showStopwatchNotification(
+    String status,
+    String elapsed,
+  ) async {
+    await initialize();
+    await _notificationsPlugin.show(
+      stopwatchNotificationId,
+      'Stopwatch: ' + status,
+      'Elapsed: ' + elapsed,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'stopwatch_channel',
+          'Stopwatch',
+          channelDescription: 'Stopwatch status',
+          importance: Importance.low,
+          priority: Priority.low,
+          ongoing: true,
+          showWhen: false,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+    );
+  }
+
+  static Future<void> cancelStopwatchNotification() async {
+    await _notificationsPlugin.cancel(stopwatchNotificationId);
+  }
 }
