@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo/services/onboarding_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -36,6 +37,22 @@ class AuthService {
 
       // Sign in to Firebase with the Google credential
       final userCredential = await _auth.signInWithCredential(credential);
+
+      // Create or update user document in Firestore
+      final user = userCredential.user;
+      if (user != null) {
+        final userDoc = FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid);
+        await userDoc.set({
+          'uid': user.uid,
+          'email': user.email,
+          'displayName': user.displayName,
+          'photoURL': user.photoURL,
+          'lastSignInTime': user.metadata.lastSignInTime?.toIso8601String(),
+          'creationTime': user.metadata.creationTime?.toIso8601String(),
+        }, SetOptions(merge: true));
+      }
 
       // Check if this is a new user
       if (userCredential.additionalUserInfo?.isNewUser == true) {

@@ -81,6 +81,9 @@ class NotificationHelper {
         ),
         // iOS: DarwinNotificationDetails(),
         iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
           sound: 'alarm.caf', // For iOS, see below
         ),
         macOS: DarwinNotificationDetails(),

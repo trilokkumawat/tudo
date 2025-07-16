@@ -101,30 +101,14 @@ class _TaskCardState extends State<TaskCard> {
               mainAxisSize: MainAxisSize.max,
               // mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(Icons.notifications_active_outlined, size: 15),
+                if (widget.task.reminder != null &&
+                    widget.task.reminder!.isNotEmpty)
+                  Icon(Icons.notifications_active_outlined, size: 15),
                 Text(
                   widget.task.reminder ?? '',
                   style: TextStyle(fontSize: 12),
                 ),
-                // if (widget.task.time != null && widget.task.time!.isNotEmpty)
-                //   Builder(
-                //     builder: (context) {
-                //       String? timeStr = widget.task.time;
-                //       DateTime? dateVal = widget.task.date;
-                //       return Row(
-                //         children: [
-                //           Icon(Icons.access_time, size: 15),
-                //           Text(
-                //             timeStr!,
-                //             style: TextStyle(
-                //               color: _getTimeColor(timeStr, dateVal),
-                //               fontSize: 12,
-                //             ),
-                //           ),
-                //         ],
-                //       );
-                //     },
-                //   ),
+
                 Spacer(),
                 Align(
                   alignment: Alignment.topRight,

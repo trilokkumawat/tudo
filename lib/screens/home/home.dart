@@ -32,6 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final authService = AuthService();
     final userPhotoURL = authService.userPhotoURL;
+    final userId = _model.authService.userId;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       body: Container(
@@ -225,7 +227,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 StreamBuilder<QuerySnapshot>(
-                  stream: _model.firestore.getData(_model.collectionpath),
+                  stream: userId != null
+                      ? _model.firestore.getUsertask(userId)
+                      : const Stream.empty(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) return CircularProgressIndicator();
                     final allTasks = snapshot.data!.docs;

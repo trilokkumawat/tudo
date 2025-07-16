@@ -7,6 +7,7 @@ import 'package:todo/flutter_flow_model.dart';
 import 'package:todo/screens/addTask/taskadd.dart';
 import 'package:todo/screens/home/home.dart';
 import 'package:todo/utils/notification_helper.dart';
+import 'package:todo/services/auth_service.dart';
 
 class TaskModel extends FlutterFlowModel<TaskAddScreen> {
   final FirestoreService firestoreService = FirestoreService();
@@ -16,6 +17,7 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
   String? selectedreminder;
   // String? selectedAlaram;
   DateTime? selectedDate;
+  final AuthService _authService = AuthService();
   @override
   void dispose() {
     // TODO: implement dispose
@@ -44,9 +46,16 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
   }
 
   taskPerform({String typeIs = "", String docid = ""}) async {
+    final userId = _authService.userId;
+    if (userId == null) {
+      print('No user logged in');
+      return;
+    }
+    print(' user logged in::$userId');
+
     if (typeIs == "ADD") {
       try {
-        await firestoreService.addData("task", {
+        await firestoreService.addUserTask(userId, {
           "task": taskController.text,
           "notes": notesController.text,
           // "alarm": selectedAlaram,
@@ -55,13 +64,14 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
           "reminder": selectedreminder,
           "status": "active",
           "date": selectedDate,
+          // 'userId': userId, // No need, service adds it
         });
       } catch (e) {
         print(e);
       }
     } else if (typeIs == "UPDATE") {
       try {
-        await firestoreService.updateData("task", docid, {
+        await firestoreService.updateUserTask(userId, docid, {
           "task": taskController.text,
           "notes": notesController.text,
           // "alarm": selectedAlaram,
@@ -70,6 +80,7 @@ class TaskModel extends FlutterFlowModel<TaskAddScreen> {
           "reminder": selectedreminder,
           "status": "active",
           "date": selectedDate,
+          // 'userId': userId, // No need, service adds it
         });
       } catch (e) {
         print(e);

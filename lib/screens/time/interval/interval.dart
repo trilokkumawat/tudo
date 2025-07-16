@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:todo/components/intervel_card.dart';
 import 'package:todo/flutter_flow_model.dart';
 import 'package:todo/screens/time/timercontroller.dart';
+import 'package:todo/services/auth_service.dart';
 
 class IntervalTask {
   final String task;
@@ -38,6 +39,7 @@ class IntervalScreen extends StatefulWidget {
 
 class _IntervalScreenState extends State<IntervalScreen> {
   late TimerController _model;
+  final AuthService _authService = AuthService();
   @override
   void initState() {
     _model = createModel(context, () => TimerController());
@@ -46,10 +48,13 @@ class _IntervalScreenState extends State<IntervalScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userId = _authService.userId;
     return Scaffold(
       // appBar: AppBar(title: const Text("Intervals")),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _model.firestore.getData(_model.collectionpath),
+        stream: userId != null
+            ? _model.firestore.getUsertask(userId)
+            : const Stream.empty(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return CircularProgressIndicator();
           final allTasks = snapshot.data!.docs;
